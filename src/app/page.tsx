@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { businessApi, categoryApi } from '../lib/api';
 import { Business, Category } from '../types';
+import LoadingScreen from '../components/LoadingScreen';
 import Header from '../components/Header';
 import HeroSection from '../components/HeroSection';
 import SpecialOffers from '../components/SpecialOffers';
@@ -22,9 +23,17 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
 
   useEffect(() => {
+    // Mostrar loading screen por 2 segundos
+    const loadingTimer = setTimeout(() => {
+      setShowLoadingScreen(false);
+    }, 2000);
+
     loadInitialData();
+
+    return () => clearTimeout(loadingTimer);
   }, []);
 
   const loadInitialData = async () => {
@@ -63,37 +72,43 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <>
+      {showLoadingScreen && <LoadingScreen />}
+      
+      <div className={`min-h-screen bg-white transition-opacity duration-500 ${
+        showLoadingScreen ? 'opacity-0' : 'opacity-100'
+      }`}>
+        <Header />
 
-      <main>
-        <HeroSection onSearch={handleSearch} />
-        
-        <SpecialOffers />
-        
-        <FeaturedListings businesses={businesses} loading={loading || searching} />
-        
-        <FeaturesSection />
-        
-        <CategorySection
-          categories={categories}
-          onCategorySelect={(categoryName) => handleSearch('', categoryName)}
-        />
-        
-        <DestinationCards />
-        
-        <AppDownload />
-        
-        <StatsSection />
-        
-        <VideoSection />
-        
-        <NewsletterSection />
-        
-        <BlogSection />
-      </main>
+        <main>
+          <HeroSection onSearch={handleSearch} />
+          
+          <SpecialOffers />
+          
+          <FeaturedListings businesses={businesses} loading={loading || searching} />
+          
+          <FeaturesSection />
+          
+          <CategorySection
+            categories={categories}
+            onCategorySelect={(categoryName) => handleSearch('', categoryName)}
+          />
+          
+          <DestinationCards />
+          
+          <AppDownload />
+          
+          <StatsSection />
+          
+          <VideoSection />
+          
+          <NewsletterSection />
+          
+          <BlogSection />
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
   );
 }
