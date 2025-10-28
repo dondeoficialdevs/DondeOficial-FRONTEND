@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { businessApi, categoryApi } from '../../lib/api';
-import { Business, Category } from '../../types';
+import { Category } from '../../types';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
