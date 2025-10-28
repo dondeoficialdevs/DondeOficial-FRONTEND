@@ -10,13 +10,14 @@ import SpecialOffers from '../components/SpecialOffers';
 import FeaturedListings from '../components/FeaturedListings';
 import FeaturesSection from '../components/FeaturesSection';
 import CategorySection from '../components/CategorySection';
-import DestinationCards from '../components/DestinationCards';
+import PuzzleCards from '../components/PuzzleCards';
 import AppDownload from '../components/AppDownload';
 import StatsSection from '../components/StatsSection';
 import VideoSection from '../components/VideoSection';
 import NewsletterSection from '../components/NewsletterSection';
 import BlogSection from '../components/BlogSection';
 import Footer from '../components/Footer';
+import PWAInstaller from '../components/PWAInstaller';
 
 export default function Home() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -94,7 +95,7 @@ export default function Home() {
             onCategorySelect={(categoryName) => handleSearch('', categoryName)}
           />
           
-          <DestinationCards />
+          <PuzzleCards />
           
           <AppDownload />
           
@@ -108,6 +109,8 @@ export default function Home() {
         </main>
 
         <Footer />
+
+        <PWAInstaller />
       </div>
     </>
   );

@@ -17,7 +17,7 @@ export default function Header() {
                 <span className="text-white font-bold text-sm">DO</span>
               </div>
               <span className="text-2xl font-bold bg-linear-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                DondeOficial
+              DondeOficial
               </span>
             </Link>
           </div>

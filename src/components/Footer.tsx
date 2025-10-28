@@ -77,7 +77,7 @@ export default function Footer() {
                 />
                 <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors duration-200">
                   Subscribe
-                </button>
+              </button>
               </div>
             </div>
           </div>
@@ -159,17 +159,17 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Bottom Section */}
       <div className="border-t border-gray-700 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-6 mb-4 md:mb-0">
-              <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm">
                 Copyright © 2025 DondeOficial. All rights reserved.
-              </p>
+            </p>
             </div>
             <div className="flex flex-wrap justify-center md:justify-end space-x-6">
               <Link href="/terms" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">

@@ -1,0 +1,16 @@
+{
+  "package_name": "com.dondeoficial.app",
+  "name": "DondeOficial",
+  "short_name": "DondeOficial",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "start_url": "/",
+  "scope": "/",
+  "description": "Directorio de negocios y servicios en tu ciudad",
+  "categories": ["business", "shopping", "utilities"],
+  "lang": "es",
+  "dir": "ltr"
+}
+

@@ -22,6 +22,7 @@ export default function AddListingPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     loadCategories();
@@ -36,16 +37,59 @@ export default function AddListingPage() {
     }
   };
 
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre del negocio es requerido';
+    }
+
+    if (!formData.category_id) {
+      newErrors.category_id = 'La categoría es requerida';
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = 'La descripción es requerida';
+    } else if (formData.description.trim().length < 20) {
+      newErrors.description = 'La descripción debe tener al menos 20 caracteres';
+    }
+
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'El email no es válido';
+    }
+
+    if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
+      newErrors.website = 'La URL debe comenzar con http:// o https://';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -109,9 +153,14 @@ export default function AddListingPage() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Add Your Business</h1>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Añade Tu Negocio</h1>
             <p className="text-xl text-gray-600">
-              List your business on DondeOficial and reach more customers
+              Promociona tu negocio en DondeOficial y llega a más clientes
             </p>
           </div>
 
@@ -119,7 +168,7 @@ export default function AddListingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Name *
+                  Nombre del Negocio *
                 </label>
                 <input
                   type="text"
@@ -128,14 +177,19 @@ export default function AddListingPage() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter business name"
+                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    errors.name ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Nombre de tu negocio"
                 />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                )}
               </div>
 
               <div>
                 <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-2">
-                  Category *
+                  Categoría *
                 </label>
                 <select
                   id="category_id"
@@ -143,21 +197,26 @@ export default function AddListingPage() {
                   value={formData.category_id}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    errors.category_id ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 >
-                  <option value="">Select a category</option>
+                  <option value="">Selecciona una categoría</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
+                {errors.category_id && (
+                  <p className="mt-1 text-sm text-red-600">{errors.category_id}</p>
+                )}
               </div>
             </div>
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
+                Descripción *
               </label>
               <textarea
                 id="description"
@@ -166,9 +225,17 @@ export default function AddListingPage() {
                 onChange={handleChange}
                 required
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Describe your business..."
+                className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  errors.description ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Describe tu negocio en detalle..."
               />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Mínimo 20 caracteres
+              </p>
             </div>
 
             <div>
@@ -204,7 +271,7 @@ export default function AddListingPage() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                  Email
                 </label>
                 <input
                   type="email"
@@ -212,15 +279,20 @@ export default function AddListingPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Email address"
+                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="correo@example.com"
                 />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
             </div>
 
             <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-2">
-                Website
+                Sitio Web
               </label>
               <input
                 type="url"
@@ -228,9 +300,14 @@ export default function AddListingPage() {
                 name="website"
                 value={formData.website}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://your-website.com"
+                className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  errors.website ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="https://tu-sitio-web.com"
               />
+              {errors.website && (
+                <p className="mt-1 text-sm text-red-600">{errors.website}</p>
+              )}
             </div>
 
             <div>
