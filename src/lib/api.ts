@@ -10,6 +10,22 @@ const api = axios.create({
   },
 });
 
+// Interceptor para manejar errores
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Si hay un error de red o el servidor no responde
+    if (!error.response) {
+      console.error('Network error:', error.message);
+      return Promise.reject(new Error('Network error. Please check your connection.'));
+    }
+    
+    // Si hay un error del servidor, devolver el mensaje del servidor
+    const message = error.response?.data?.message || error.message || 'An error occurred';
+    return Promise.reject(new Error(message));
+  }
+);
+
 export const businessApi = {
   // Obtener todos los negocios con filtros opcionales
   getAll: async (filters?: BusinessFilters): Promise<Business[]> => {

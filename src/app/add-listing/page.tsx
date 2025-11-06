@@ -114,9 +114,12 @@ export default function AddListingPage() {
         latitude: '',
         longitude: ''
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating business:', error);
-      alert('Error creating listing. Please try again.');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error creating listing. Please try again.';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
