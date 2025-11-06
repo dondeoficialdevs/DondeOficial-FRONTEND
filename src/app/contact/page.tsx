@@ -44,9 +44,12 @@ export default function ContactPage() {
         subject: '',
         message: '',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error sending message:', err);
-      setError(err.response?.data?.message || 'Error sending message. Please try again.');
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Error sending message. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -61,7 +64,7 @@ export default function ContactPage() {
             <div className="text-green-600 text-6xl mb-4">✓</div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Message Sent!</h1>
             <p className="text-gray-600 mb-8">
-              Thank you for contacting us. We'll get back to you soon.
+              Thank you for contacting us. We&apos;ll get back to you soon.
             </p>
             <button
               onClick={() => setSubmitted(false)}

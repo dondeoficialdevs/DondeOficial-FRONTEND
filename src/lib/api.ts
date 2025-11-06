@@ -69,6 +69,21 @@ export const categoryApi = {
   },
 };
 
+interface Lead {
+  id: number;
+  full_name: string;
+  email: string;
+  subject: string;
+  message: string;
+  created_at: string;
+}
+
+interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  subscribed_at: string;
+}
+
 export const leadsApi = {
   // Crear nuevo lead (formulario de contacto)
   create: async (leadData: {
@@ -76,16 +91,16 @@ export const leadsApi = {
     email: string;
     subject: string;
     message: string;
-  }): Promise<any> => {
-    const response = await api.post<ApiResponse<any>>('/leads', leadData);
+  }): Promise<Lead> => {
+    const response = await api.post<ApiResponse<Lead>>('/leads', leadData);
     return response.data.data;
   },
 };
 
 export const newsletterApi = {
   // Suscribirse al newsletter
-  subscribe: async (email: string): Promise<any> => {
-    const response = await api.post<ApiResponse<any>>('/newsletter/subscribe', { email });
+  subscribe: async (email: string): Promise<NewsletterSubscriber> => {
+    const response = await api.post<ApiResponse<NewsletterSubscriber>>('/newsletter/subscribe', { email });
     return response.data.data;
   },
 };

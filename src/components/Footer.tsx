@@ -20,9 +20,12 @@ export default function Footer() {
       setSubmitted(true);
       setEmail('');
       setTimeout(() => setSubmitted(false), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error subscribing:', err);
-      setError(err.response?.data?.message || 'Error subscribing. Please try again.');
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Error subscribing. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
