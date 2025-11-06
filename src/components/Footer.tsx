@@ -1,6 +1,32 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
+import { newsletterApi } from '@/lib/api';
 
 export default function Footer() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      await newsletterApi.subscribe(email);
+      setSubmitted(true);
+      setEmail('');
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (err: any) {
+      console.error('Error subscribing:', err);
+      setError(err.response?.data?.message || 'Error subscribing. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <footer className="bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Main Footer Content */}
@@ -69,16 +95,37 @@ export default function Footer() {
             <div className="bg-gray-800 rounded-lg p-4">
               <h4 className="font-semibold mb-2">Stay Updated</h4>
               <p className="text-gray-300 text-sm mb-3">Get the latest business listings and offers</p>
-              <div className="flex space-x-2">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email" 
-                  className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors duration-200">
-                  Subscribe
-              </button>
-              </div>
+              {submitted ? (
+                <div className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium text-center">
+                  ✓ Subscribed!
+                </div>
+              ) : (
+                <form onSubmit={handleNewsletterSubmit} className="flex flex-col space-y-2">
+                  {error && (
+                    <div className="text-red-400 text-xs">{error}</div>
+                  )}
+                  <div className="flex space-x-2">
+                    <input 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="Enter your email" 
+                      required
+                      className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? '...' : 'Subscribe'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
 

@@ -68,3 +68,24 @@ export const categoryApi = {
     return response.data.data;
   },
 };
+
+export const leadsApi = {
+  // Crear nuevo lead (formulario de contacto)
+  create: async (leadData: {
+    full_name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): Promise<any> => {
+    const response = await api.post<ApiResponse<any>>('/leads', leadData);
+    return response.data.data;
+  },
+};
+
+export const newsletterApi = {
+  // Suscribirse al newsletter
+  subscribe: async (email: string): Promise<any> => {
+    const response = await api.post<ApiResponse<any>>('/newsletter/subscribe', { email });
+    return response.data.data;
+  },
+};
