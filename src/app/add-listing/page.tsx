@@ -118,7 +118,7 @@ export default function AddListingPage() {
       console.error('Error creating business:', error);
       const errorMessage = error instanceof Error 
         ? error.message 
-        : 'Error creating listing. Please try again.';
+        : 'Error al crear el negocio. Por favor intenta de nuevo.';
       alert(errorMessage);
     } finally {
       setLoading(false);
@@ -132,15 +132,15 @@ export default function AddListingPage() {
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="text-green-600 text-6xl mb-4">✓</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Listing Submitted!</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">¡Negocio Enviado!</h1>
             <p className="text-gray-600 mb-8">
-              Thank you for submitting your business listing. We&apos;ll review it and publish it soon.
+              Gracias por enviar tu negocio. Lo revisaremos y lo publicaremos pronto.
             </p>
             <button
               onClick={() => setSubmitted(false)}
               className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
             >
-              Add Another Listing
+              Agregar Otro Negocio
             </button>
           </div>
         </main>
@@ -242,8 +242,8 @@ export default function AddListingPage() {
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                Address
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                Dirección
               </label>
               <input
                 type="text"
@@ -252,14 +252,14 @@ export default function AddListingPage() {
                 value={formData.address}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Business address"
+                placeholder="Dirección del negocio"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
+                  Teléfono
                 </label>
                 <input
                   type="tel"
@@ -268,13 +268,13 @@ export default function AddListingPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Phone number"
+                  placeholder="Número de teléfono"
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
+                  Correo Electrónico
                 </label>
                 <input
                   type="email"
@@ -315,7 +315,7 @@ export default function AddListingPage() {
 
             <div>
               <label htmlFor="opening_hours" className="block text-sm font-medium text-gray-700 mb-2">
-                Opening Hours
+                Horario de Atención
               </label>
               <input
                 type="text"
@@ -324,14 +324,14 @@ export default function AddListingPage() {
                 value={formData.opening_hours}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., Mon-Fri: 9AM-6PM, Sat: 10AM-4PM"
+                placeholder="Ej: Lun-Vie: 9AM-6PM, Sáb: 10AM-4PM"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="latitude" className="block text-sm font-medium text-gray-700 mb-2">
-                  Latitude (optional)
+                  Latitud (opcional)
                 </label>
                 <input
                   type="number"
@@ -347,7 +347,7 @@ export default function AddListingPage() {
 
               <div>
                 <label htmlFor="longitude" className="block text-sm font-medium text-gray-700 mb-2">
-                  Longitude (optional)
+                  Longitud (opcional)
                 </label>
                 <input
                   type="number"
@@ -368,7 +368,7 @@ export default function AddListingPage() {
                 disabled={loading}
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Submit Listing'}
+                {loading ? 'Enviando...' : 'Enviar Negocio'}
               </button>
             </div>
           </form>

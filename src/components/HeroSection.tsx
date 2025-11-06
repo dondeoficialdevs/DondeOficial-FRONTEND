@@ -23,25 +23,25 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center text-white mb-16">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            <span className="block">Dream</span>
-            <span className="block bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent">Explore</span>
-            <span className="block">Discover</span>
+            <span className="block">Sueña</span>
+            <span className="block bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent">Explora</span>
+            <span className="block">Descubre</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto leading-relaxed">
-            People Don&apos;t Take Trips, Trips Take People
+            La gente no hace viajes, los viajes hacen a la gente
           </p>
           <div className="flex justify-center items-center space-x-8 text-sm opacity-80">
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span>Trusted by 10,000+ businesses</span>
+              <span>Confiado por más de 10,000 negocios</span>
             </div>
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span>Verified listings</span>
+              <span>Listados verificados</span>
             </div>
           </div>
         </div>
@@ -59,7 +59,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                 <input
                   type="text"
                   name="search"
-                  placeholder="What are you looking for?"
+                  placeholder="¿Qué estás buscando?"
                   className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg placeholder-gray-500 transition-all duration-200"
                 />
               </div>
@@ -73,7 +73,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                 <input
                   type="text"
                   name="location"
-                  placeholder="Where?"
+                  placeholder="¿Dónde?"
                   className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg placeholder-gray-500 transition-all duration-200"
                 />
               </div>
@@ -84,16 +84,16 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span>Search</span>
+                <span>Buscar</span>
               </button>
             </div>
           </form>
 
           {/* Enhanced Popular Searches */}
           <div className="mt-8 text-center">
-            <p className="text-white opacity-80 mb-4 text-sm font-medium">Popular searches:</p>
+            <p className="text-white opacity-80 mb-4 text-sm font-medium">Búsquedas populares:</p>
             <div className="flex flex-wrap justify-center gap-3">
-              {['Restaurant', 'Museum', 'Gym', 'Shopping', 'Hotel', 'Park', 'Cafe', 'Bank'].map((item) => (
+              {['Restaurante', 'Museo', 'Gimnasio', 'Compras', 'Hotel', 'Parque', 'Café', 'Banco'].map((item) => (
                 <button
                   key={item}
                   onClick={() => onSearch(item)}

@@ -14,8 +14,8 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
       <section className="py-20 bg-linear-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Listings</h2>
-            <p className="text-lg text-gray-600 mb-12">Discover amazing places around you</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Negocios Destacados</h2>
+            <p className="text-lg text-gray-600 mb-12">Descubre lugares increíbles cerca de ti</p>
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
@@ -29,9 +29,9 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
     <section className="py-20 bg-linear-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Listings</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Negocios Destacados</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Discover amazing places around you. From restaurants to museums, find exactly what you&apos;re looking for.
+            Descubre lugares increíbles cerca de ti. Desde restaurantes hasta museos, encuentra exactamente lo que buscas.
           </p>
         </div>
 
@@ -59,14 +59,14 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
                         ? 'bg-red-500 text-white' 
                         : 'bg-green-500 text-white'
                     }`}>
-                      {business.opening_hours?.toLowerCase().includes('close') ? 'Closed' : 'Open'}
+                      {business.opening_hours?.toLowerCase().includes('close') ? 'Cerrado' : 'Abierto'}
                     </span>
                   </div>
 
                   {/* Featured Badge */}
                   <div className="absolute bottom-4 left-4">
                     <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                      Featured
+                      Destacado
                     </span>
                   </div>
                 </div>
@@ -90,7 +90,7 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
                         </svg>
                       ))}
                     </div>
-                    <span className="ml-2 text-sm text-gray-600 font-medium">(24 Reviews)</span>
+                    <span className="ml-2 text-sm text-gray-600 font-medium">(24 Reseñas)</span>
                   </div>
 
                   {/* Contact Info */}
@@ -124,13 +124,13 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
                       href={`/businesses/${business.id}`}
                       className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
-                      View Details
+                      Ver Detalles
                     </Link>
                     <button className="flex items-center space-x-2 text-gray-400 hover:text-red-500 transition-colors duration-200 group">
                       <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
-                      <span className="text-sm font-medium">Save</span>
+                      <span className="text-sm font-medium">Guardar</span>
                     </button>
                   </div>
                 </div>
@@ -143,15 +143,15 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
               <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No listings found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No se encontraron negocios</h3>
               <p className="text-gray-500 mb-6">
-                We&apos;re working on adding more amazing places. Check back soon!
+                Estamos trabajando en agregar más lugares increíbles. ¡Vuelve pronto!
               </p>
               <Link
                 href="/add-listing"
                 className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
               >
-                Add Your Business
+                Agrega Tu Negocio
               </Link>
             </div>
           </div>
