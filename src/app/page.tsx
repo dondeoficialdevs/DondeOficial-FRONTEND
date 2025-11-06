@@ -10,7 +10,6 @@ import SpecialOffers from '../components/SpecialOffers';
 import FeaturedListings from '../components/FeaturedListings';
 import FeaturesSection from '../components/FeaturesSection';
 import CategorySection from '../components/CategorySection';
-import PuzzleCards from '../components/PuzzleCards';
 import AppDownload from '../components/AppDownload';
 import StatsSection from '../components/StatsSection';
 import VideoSection from '../components/VideoSection';
@@ -94,8 +93,6 @@ export default function Home() {
             categories={categories}
             onCategorySelect={(categoryName) => handleSearch('', categoryName)}
           />
-          
-          <PuzzleCards />
           
           <AppDownload />
           

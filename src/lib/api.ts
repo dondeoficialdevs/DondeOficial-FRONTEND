@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Business, Category, ApiResponse, BusinessFilters } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -13,15 +13,22 @@ const api = axios.create({
 // Interceptor para manejar errores
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  (error: unknown) => {
     // Si hay un error de red o el servidor no responde
-    if (!error.response) {
-      console.error('Network error:', error.message);
+    if (error instanceof AxiosError && !error.response) {
+      const errorMessage = error.message || 'Network error';
+      console.error('Network error:', errorMessage);
       return Promise.reject(new Error('Network error. Please check your connection.'));
     }
     
     // Si hay un error del servidor, devolver el mensaje del servidor
-    const message = error.response?.data?.message || error.message || 'An error occurred';
+    if (error instanceof AxiosError) {
+      const message = error.response?.data?.message || error.message || 'An error occurred';
+      return Promise.reject(new Error(message));
+    }
+    
+    // Si es otro tipo de error
+    const message = error instanceof Error ? error.message : 'An error occurred';
     return Promise.reject(new Error(message));
   }
 );
