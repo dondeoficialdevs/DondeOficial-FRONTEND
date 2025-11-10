@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { Business, Category, ApiResponse, BusinessFilters } from '@/types';
+import { Business, BusinessImage, Category, ApiResponse, BusinessFilters } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -54,9 +54,31 @@ export const businessApi = {
     return response.data.data;
   },
 
-  // Crear nuevo negocio
-  create: async (businessData: Partial<Business>): Promise<Business> => {
-    const response = await api.post<ApiResponse<Business>>('/businesses', businessData);
+  // Crear nuevo negocio con imágenes (multipart/form-data)
+  create: async (businessData: Partial<Business>, images?: File[]): Promise<Business> => {
+    const formData = new FormData();
+    
+    // Agregar campos del negocio
+    Object.keys(businessData).forEach((key) => {
+      const value = businessData[key as keyof Business];
+      // Solo agregar campos que tengan valor y no sean 'images'
+      if (value !== undefined && value !== null && value !== '' && key !== 'images') {
+        formData.append(key, String(value));
+      }
+    });
+    
+    // Agregar imágenes si existen
+    if (images && images.length > 0) {
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
+    }
+    
+    const response = await api.post<ApiResponse<Business>>('/businesses', formData, {
+      headers: {
+        'Content-Type': undefined, // Dejar que Axios establezca automáticamente el Content-Type con boundary
+      },
+    });
     return response.data.data;
   },
 
@@ -69,6 +91,26 @@ export const businessApi = {
   // Eliminar negocio
   delete: async (id: number): Promise<void> => {
     await api.delete(`/businesses/${id}`);
+  },
+
+  // Agregar imágenes a un negocio existente
+  addImages: async (id: number, images: File[]): Promise<BusinessImage[]> => {
+    const formData = new FormData();
+    images.forEach((image) => {
+      formData.append('images', image);
+    });
+    
+    const response = await api.post<ApiResponse<BusinessImage[]>>(`/businesses/${id}/images`, formData, {
+      headers: {
+        'Content-Type': undefined, // Dejar que Axios establezca automáticamente el Content-Type con boundary
+      },
+    });
+    return response.data.data;
+  },
+
+  // Eliminar una imagen específica
+  deleteImage: async (businessId: number, imageId: number): Promise<void> => {
+    await api.delete(`/businesses/${businessId}/images/${imageId}`);
   },
 };
 

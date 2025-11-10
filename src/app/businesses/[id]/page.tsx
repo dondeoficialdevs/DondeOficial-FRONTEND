@@ -122,6 +122,29 @@ export default function BusinessDetail() {
 
           {/* Business Content */}
           <div className="p-8 md:p-12">
+            {/* Galería de Imágenes */}
+            {business.images && business.images.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Galería de Imágenes</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {business.images.map((image) => (
+                    <div key={image.id} className="relative group overflow-hidden rounded-lg">
+                      <img
+                        src={image.image_url}
+                        alt={`${business.name} - Imagen ${image.id}`}
+                        className="w-full h-64 object-cover transition-transform group-hover:scale-105"
+                      />
+                      {image.is_primary && (
+                        <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded">
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column */}
               <div className="space-y-8">

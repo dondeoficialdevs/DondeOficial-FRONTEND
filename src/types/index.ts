@@ -1,3 +1,10 @@
+export interface BusinessImage {
+  id: number;
+  image_url: string;
+  is_primary: boolean;
+  created_at?: string;
+}
+
 export interface Business {
   id: number;
   name: string;
@@ -11,6 +18,7 @@ export interface Business {
   opening_hours?: string;
   latitude?: number;
   longitude?: number;
+  images?: BusinessImage[];
   created_at: string;
   updated_at: string;
 }
