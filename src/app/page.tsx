@@ -81,9 +81,9 @@ export default function Home() {
         <Header />
 
         <main>
-          <HeroSection onSearch={handleSearch} />
-          
           <SpecialOffers />
+          
+          <HeroSection onSearch={handleSearch} />
           
           <FeaturedListings businesses={businesses} loading={loading || searching} />
           
