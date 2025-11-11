@@ -160,6 +160,23 @@ export const leadsApi = {
     const response = await api.post<ApiResponse<Lead>>('/leads', leadData);
     return response.data.data;
   },
+
+  // Obtener todos los leads
+  getAll: async (params?: { limit?: number; offset?: number }): Promise<Lead[]> => {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    
+    const url = `/leads${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get<ApiResponse<Lead[]>>(url);
+    return response.data.data;
+  },
+
+  // Obtener lead por ID
+  getById: async (id: number): Promise<Lead> => {
+    const response = await api.get<ApiResponse<Lead>>(`/leads/${id}`);
+    return response.data.data;
+  },
 };
 
 export const newsletterApi = {
@@ -167,5 +184,30 @@ export const newsletterApi = {
   subscribe: async (email: string): Promise<NewsletterSubscriber> => {
     const response = await api.post<ApiResponse<NewsletterSubscriber>>('/newsletter/subscribe', { email });
     return response.data.data;
+  },
+
+  // Obtener todos los suscriptores
+  getAllSubscribers: async (params?: { limit?: number; offset?: number }): Promise<NewsletterSubscriber[]> => {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    
+    const url = `/newsletter/subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get<ApiResponse<NewsletterSubscriber[]>>(url);
+    return response.data.data;
+  },
+
+  // Eliminar suscriptor
+  deleteSubscriber: async (id: number): Promise<void> => {
+    await api.delete(`/newsletter/subscribers/${id}`);
+  },
+};
+
+// Health check endpoint
+export const healthApi = {
+  // Verificar estado del API
+  check: async (): Promise<{ message: string; status: string }> => {
+    const response = await api.get('/health');
+    return response.data;
   },
 };
