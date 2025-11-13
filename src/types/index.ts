@@ -45,3 +45,18 @@ export interface BusinessFilters {
   limit?: number;
   offset?: number;
 }
+
+export interface Lead {
+  id: number;
+  full_name: string;
+  email: string;
+  subject: string;
+  message: string;
+  created_at: string;
+}
+
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  subscribed_at: string;
+}

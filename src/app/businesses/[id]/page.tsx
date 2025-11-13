@@ -1,18 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { businessApi } from '@/lib/api';
-import { Business } from '@/types';
+import { Business, BusinessImage } from '@/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 
 export default function BusinessDetail() {
   const params = useParams();
+  const router = useRouter();
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showAddImages, setShowAddImages] = useState(false);
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -30,6 +38,109 @@ export default function BusinessDetail() {
       setError('Negocio no encontrado');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!business) return;
+    
+    setDeleting(true);
+    try {
+      await businessApi.delete(business.id);
+      router.push('/listings');
+    } catch (error) {
+      console.error('Error deleting business:', error);
+      alert('Error al eliminar el negocio. Por favor intenta de nuevo.');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const fileArray = Array.from(files);
+    const currentImageCount = business?.images?.length || 0;
+
+    if (currentImageCount + newImages.length + fileArray.length > 10) {
+      alert('Máximo 10 imágenes permitidas en total');
+      return;
+    }
+
+    const validFiles: File[] = [];
+    const previews: string[] = [];
+
+    fileArray.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} no es una imagen válida`);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`${file.name} es muy grande. Máximo 5MB por imagen`);
+        return;
+      }
+
+      validFiles.push(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        previews.push(result);
+        if (previews.length === validFiles.length) {
+          setImagePreviews([...imagePreviews, ...previews]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setNewImages([...newImages, ...validFiles]);
+  };
+
+  const removeImage = (index: number) => {
+    const newFiles = [...newImages];
+    const newPreviews = [...imagePreviews];
+    newFiles.splice(index, 1);
+    newPreviews.splice(index, 1);
+    setNewImages(newFiles);
+    setImagePreviews(newPreviews);
+  };
+
+  const handleUploadImages = async () => {
+    if (!business || newImages.length === 0) return;
+
+    setUploadingImages(true);
+    try {
+      await businessApi.addImages(business.id, newImages);
+      setNewImages([]);
+      setImagePreviews([]);
+      setShowAddImages(false);
+      await loadBusiness(business.id);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      alert('Error al subir las imágenes. Por favor intenta de nuevo.');
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const handleDeleteImage = async (imageId: number) => {
+    if (!business) return;
+
+    if (!confirm('¿Estás seguro de que deseas eliminar esta imagen?')) {
+      return;
+    }
+
+    setDeletingImageId(imageId);
+    try {
+      await businessApi.deleteImage(business.id, imageId);
+      await loadBusiness(business.id);
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Error al eliminar la imagen. Por favor intenta de nuevo.');
+    } finally {
+      setDeletingImageId(null);
     }
   };
 
@@ -92,6 +203,24 @@ export default function BusinessDetail() {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
+                  <Link
+                    href={`/businesses/${business.id}/edit`}
+                    className="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all shadow-lg font-semibold"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar
+                  </Link>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-lg font-semibold"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
                   {business.website && (
                     <a
                       href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
@@ -123,9 +252,80 @@ export default function BusinessDetail() {
           {/* Business Content */}
           <div className="p-8 md:p-12">
             {/* Galería de Imágenes */}
-            {business.images && business.images.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Galería de Imágenes</h2>
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Galería de Imágenes</h2>
+                <button
+                  onClick={() => setShowAddImages(!showAddImages)}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  {showAddImages ? 'Cancelar' : 'Agregar Imágenes'}
+                </button>
+              </div>
+
+              {/* Sección para agregar imágenes */}
+              {showAddImages && (
+                <div className="mb-6 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Seleccionar imágenes (máximo 10 en total)
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={handleImageChange}
+                      aria-label="Seleccionar imágenes para agregar al negocio"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    <p className="mt-2 text-xs text-gray-500">
+                      Formatos permitidos: JPG, PNG. Tamaño máximo: 5MB por imagen.
+                    </p>
+                  </div>
+
+                  {imagePreviews.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Vista previa:</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                            <button
+                              onClick={() => removeImage(index)}
+                              aria-label={`Eliminar imagen ${index + 1}`}
+                              title="Eliminar imagen"
+                              className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {newImages.length > 0 && (
+                    <button
+                      onClick={handleUploadImages}
+                      disabled={uploadingImages}
+                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {uploadingImages ? 'Subiendo...' : `Subir ${newImages.length} imagen${newImages.length > 1 ? 'es' : ''}`}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {business.images && business.images.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {business.images.map((image) => (
                     <div key={image.id} className="relative group overflow-hidden rounded-lg">
@@ -139,11 +339,32 @@ export default function BusinessDetail() {
                           Principal
                         </span>
                       )}
+                      <button
+                        onClick={() => handleDeleteImage(image.id)}
+                        disabled={deletingImageId === image.id}
+                        className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Eliminar imagen"
+                      >
+                        {deletingImageId === image.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        )}
+                      </button>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-gray-500">No hay imágenes disponibles</p>
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column */}
@@ -282,6 +503,34 @@ export default function BusinessDetail() {
       </main>
 
       <Footer />
+
+      {/* Modal de confirmación de eliminación */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirmar eliminación</h3>
+            <p className="text-gray-700 mb-6">
+              ¿Estás seguro de que deseas eliminar el negocio <strong>{business?.name}</strong>? 
+              Esta acción no se puede deshacer y también se eliminarán todas las imágenes asociadas.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

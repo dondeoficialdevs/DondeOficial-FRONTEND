@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { Business, BusinessImage, Category, ApiResponse, BusinessFilters } from '@/types';
+import { Business, BusinessImage, Category, ApiResponse, BusinessFilters, Lead, NewsletterSubscriber } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -18,7 +18,19 @@ api.interceptors.response.use(
     if (error instanceof AxiosError && !error.response) {
       const errorMessage = error.message || 'Network error';
       console.error('Network error:', errorMessage);
-      return Promise.reject(new Error('Network error. Please check your connection.'));
+      console.error('API URL:', API_URL);
+      
+      // Mensaje más descriptivo
+      let message = 'No se pudo conectar con el servidor. ';
+      if (error.code === 'ECONNREFUSED') {
+        message += 'El servidor backend no está disponible. Verifica que esté corriendo en ' + API_URL;
+      } else if (error.code === 'ERR_NETWORK') {
+        message += 'Error de red. Verifica tu conexión a internet y que el backend esté accesible.';
+      } else {
+        message += 'Verifica que el backend esté corriendo y accesible en ' + API_URL;
+      }
+      
+      return Promise.reject(new Error(message));
     }
     
     // Si hay un error del servidor, devolver el mensaje del servidor
@@ -133,21 +145,6 @@ export const categoryApi = {
     return response.data.data;
   },
 };
-
-interface Lead {
-  id: number;
-  full_name: string;
-  email: string;
-  subject: string;
-  message: string;
-  created_at: string;
-}
-
-interface NewsletterSubscriber {
-  id: number;
-  email: string;
-  subscribed_at: string;
-}
 
 export const leadsApi = {
   // Crear nuevo lead (formulario de contacto)
