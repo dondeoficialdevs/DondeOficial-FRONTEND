@@ -13,7 +13,7 @@ export default function ActionCards() {
   const directoryCardImage = '/images/action-cards/Fondo-turismo.jpg';
 
   const whatsappRef = useRef<HTMLAnchorElement>(null);
-  const directoryRef = useRef<HTMLElement>(null);
+  const directoryRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     if (whatsappRef.current) {
