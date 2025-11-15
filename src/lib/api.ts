@@ -17,8 +17,9 @@ api.interceptors.response.use(
     // Si hay un error de red o el servidor no responde
     if (error instanceof AxiosError && !error.response) {
       const errorMessage = error.message || 'Network error';
-      console.error('Network error:', errorMessage);
-      console.error('API URL:', API_URL);
+      console.error('❌ Network error:', errorMessage);
+      console.error('📍 API URL:', API_URL);
+      console.error('🔍 Error code:', error.code);
       
       // Mensaje más descriptivo
       let message = 'No se pudo conectar con el servidor. ';
@@ -26,6 +27,8 @@ api.interceptors.response.use(
         message += 'El servidor backend no está disponible. Verifica que esté corriendo en ' + API_URL;
       } else if (error.code === 'ERR_NETWORK') {
         message += 'Error de red. Verifica tu conexión a internet y que el backend esté accesible.';
+      } else if (error.code === 'ETIMEDOUT') {
+        message += 'El servidor tardó demasiado en responder. Verifica que el backend esté funcionando.';
       } else {
         message += 'Verifica que el backend esté corriendo y accesible en ' + API_URL;
       }
@@ -34,9 +37,24 @@ api.interceptors.response.use(
     }
     
     // Si hay un error del servidor, devolver el mensaje del servidor
-    if (error instanceof AxiosError) {
-      const message = error.response?.data?.message || error.message || 'An error occurred';
-      return Promise.reject(new Error(message));
+    if (error instanceof AxiosError && error.response) {
+      const status = error.response.status;
+      const serverMessage = error.response?.data?.message || error.message || 'An error occurred';
+      
+      console.error(`❌ API Error [${status}]:`, serverMessage);
+      console.error('📍 URL:', error.config?.url);
+      
+      // Mensajes más amigables según el código de estado
+      if (status === 500) {
+        const message = error.response?.data?.error || serverMessage;
+        return Promise.reject(new Error(message || 'Error interno del servidor. Por favor, intenta más tarde.'));
+      } else if (status === 404) {
+        return Promise.reject(new Error('Recurso no encontrado.'));
+      } else if (status === 400) {
+        return Promise.reject(new Error(serverMessage || 'Datos inválidos.'));
+      }
+      
+      return Promise.reject(new Error(serverMessage));
     }
     
     // Si es otro tipo de error

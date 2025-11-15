@@ -24,6 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Mostrar loading screen por 2 segundos
@@ -38,14 +39,28 @@ export default function Home() {
 
   const loadInitialData = async () => {
     try {
+      setError(null);
       const [businessesData, categoriesData] = await Promise.all([
-        businessApi.getAll({ limit: 12 }).catch(() => []),
-        categoryApi.getAll().catch(() => [])
+        businessApi.getAll({ limit: 12 }).catch((err) => {
+          console.error('Error loading businesses:', err);
+          return [];
+        }),
+        categoryApi.getAll().catch((err) => {
+          console.error('Error loading categories:', err);
+          return [];
+        })
       ]);
       setBusinesses(businessesData);
       setCategories(categoriesData);
+      
+      // Si ambos arrays están vacíos, podría ser un error de conexión
+      if (businessesData.length === 0 && categoriesData.length === 0) {
+        setError('No se pudieron cargar los datos. Verifica la conexión con el servidor.');
+      }
     } catch (error) {
       console.error('Error loading data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar los datos';
+      setError(errorMessage);
       setBusinesses([]);
       setCategories([]);
     } finally {
@@ -85,6 +100,19 @@ export default function Home() {
           
           <HeroSection onSearch={handleSearch} />
           
+          {error && (
+            <div className="container mx-auto px-4 py-8">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                <p className="text-red-800 font-medium">⚠️ {error}</p>
+                <button
+                  onClick={loadInitialData}
+                  className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                >
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          )}
           <FeaturedListings businesses={businesses} loading={loading || searching} />
           
           <FeaturesSection />
