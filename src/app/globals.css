@@ -154,12 +154,12 @@ body {
   }
 }
 
-/* Pattern background para SpecialOffers */
+/* Pattern background para ActionCards */
 .pattern-background {
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
-/* Gradientes para tarjetas SpecialOffers */
+/* Gradientes para tarjetas ActionCards */
 .card-whatsapp-gradient {
   background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
 }
@@ -168,16 +168,14 @@ body {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #4338ca 100%);
 }
 
-/* Background images for SpecialOffers cards */
-.card-whatsapp-bg {
-  background-image: url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80');
+/* Background images for ActionCards cards */
+.action-card-whatsapp {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-.card-directory-bg {
-  background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80');
+.action-card-directory {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

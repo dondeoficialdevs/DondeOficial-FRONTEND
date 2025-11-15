@@ -6,7 +6,7 @@ import { Business, Category } from '../types';
 import LoadingScreen from '../components/LoadingScreen';
 import Header from '../components/Header';
 import HeroSection from '../components/HeroSection';
-import SpecialOffers from '../components/SpecialOffers';
+import ActionCards from '../components/ActionCards';
 import FeaturedListings from '../components/FeaturedListings';
 import FeaturesSection from '../components/FeaturesSection';
 import CategorySection from '../components/CategorySection';
@@ -109,7 +109,7 @@ export default function Home() {
         <Header />
 
         <main>
-          <SpecialOffers />
+          <ActionCards />
           
           <HeroSection onSearch={handleSearch} />
           
