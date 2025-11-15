@@ -46,8 +46,16 @@ api.interceptors.response.use(
       
       // Mensajes más amigables según el código de estado
       if (status === 500) {
-        const message = error.response?.data?.error || serverMessage;
-        return Promise.reject(new Error(message || 'Error interno del servidor. Por favor, intenta más tarde.'));
+        const errorData = error.response?.data;
+        const message = errorData?.error || errorData?.message || serverMessage;
+        const code = errorData?.code;
+        // Construir mensaje más informativo
+        let fullMessage = message || 'Error interno del servidor. Por favor, intenta más tarde.';
+        if (code) {
+          fullMessage += ` (Código: ${code})`;
+        }
+        console.error('❌ Server Error Details:', errorData);
+        return Promise.reject(new Error(fullMessage));
       } else if (status === 404) {
         return Promise.reject(new Error('Recurso no encontrado.'));
       } else if (status === 400) {
@@ -74,8 +82,26 @@ export const businessApi = {
     if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.offset) params.append('offset', filters.offset.toString());
 
-    const response = await api.get<ApiResponse<Business[]>>(`/businesses?${params.toString()}`);
-    return response.data.data;
+    const url = `/businesses?${params.toString()}`;
+    console.log('🌐 Requesting:', API_URL + url);
+    
+    try {
+      const response = await api.get<ApiResponse<Business[]>>(url);
+      console.log('✅ Response received:', {
+        success: response.data.success,
+        count: response.data.count,
+        dataLength: response.data.data?.length || 0
+      });
+      
+      if (!response.data.success) {
+        console.warn('⚠️ API returned success: false', response.data);
+      }
+      
+      return response.data.data || [];
+    } catch (error) {
+      console.error('❌ Error in businessApi.getAll:', error);
+      throw error;
+    }
   },
 
   // Obtener negocio por ID
@@ -147,8 +173,21 @@ export const businessApi = {
 export const categoryApi = {
   // Obtener todas las categorías
   getAll: async (): Promise<Category[]> => {
-    const response = await api.get<ApiResponse<Category[]>>('/categories');
-    return response.data.data;
+    const url = '/categories';
+    console.log('🌐 Requesting categories:', API_URL + url);
+    
+    try {
+      const response = await api.get<ApiResponse<Category[]>>(url);
+      console.log('✅ Categories response:', {
+        success: response.data.success,
+        count: response.data.count,
+        dataLength: response.data.data?.length || 0
+      });
+      return response.data.data || [];
+    } catch (error) {
+      console.error('❌ Error in categoryApi.getAll:', error);
+      throw error;
+    }
   },
 
   // Obtener categoría por ID

@@ -24,25 +24,39 @@ export default function ListingsPage() {
   const loadInitialData = async () => {
     try {
       setError(null);
+      console.log('🔍 Cargando datos iniciales...');
+      console.log('📍 API URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api');
+      
       const [businessesData, categoriesData] = await Promise.all([
         businessApi.getAll({ limit: 20 }).catch((err) => {
-          console.error('Error loading businesses:', err);
+          console.error('❌ Error loading businesses:', err);
+          const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+          setError(`Error al cargar negocios: ${errorMsg}`);
           return [];
         }),
         categoryApi.getAll().catch((err) => {
-          console.error('Error loading categories:', err);
+          console.error('❌ Error loading categories:', err);
+          // No establecer error aquí para no sobrescribir el de businesses
           return [];
         })
       ]);
+      
+      console.log('✅ Datos cargados:', {
+        businesses: businessesData.length,
+        categories: categoriesData.length
+      });
+      
       setBusinesses(businessesData);
       setCategories(categoriesData);
       
       // Si ambos arrays están vacíos, podría ser un error de conexión
       if (businessesData.length === 0 && categoriesData.length === 0) {
-        setError('No se pudieron cargar los datos. Verifica la conexión con el servidor.');
+        setError('No se pudieron cargar los datos. Verifica la conexión con el servidor. Revisa la consola para más detalles.');
+      } else if (businessesData.length === 0) {
+        setError('No se encontraron negocios en la base de datos.');
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar los datos';
       setError(errorMessage);
       setBusinesses([]);
