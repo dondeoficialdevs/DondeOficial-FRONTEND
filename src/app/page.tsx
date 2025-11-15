@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { businessApi, categoryApi } from '../lib/api';
 import { Business, Category } from '../types';
 import LoadingScreen from '../components/LoadingScreen';
 import Header from '../components/Header';
 import ActionCards from '../components/ActionCards';
-import GoogleMapsSection from '../components/GoogleMapsSection';
 import FeaturedListings from '../components/FeaturedListings';
 import FeaturesSection from '../components/FeaturesSection';
 import CategorySection from '../components/CategorySection';
@@ -16,7 +16,10 @@ import VideoSection from '../components/VideoSection';
 import NewsletterSection from '../components/NewsletterSection';
 import BlogSection from '../components/BlogSection';
 import Footer from '../components/Footer';
-import PWAInstaller from '../components/PWAInstaller';
+
+// Importar componentes que requieren APIs del navegador solo en el cliente
+const GoogleMapsSection = dynamic(() => import('../components/GoogleMapsSection'), { ssr: false });
+const PWAInstaller = dynamic(() => import('../components/PWAInstaller'), { ssr: false });
 
 export default function Home() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
