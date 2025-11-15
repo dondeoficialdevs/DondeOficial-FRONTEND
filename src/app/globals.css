@@ -181,3 +181,8 @@ body {
   background-repeat: no-repeat;
 }
 
+/* Map container height */
+.map-container {
+  height: 500px;
+}
+
