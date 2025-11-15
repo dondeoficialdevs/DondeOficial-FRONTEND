@@ -5,8 +5,8 @@ import { businessApi, categoryApi } from '../lib/api';
 import { Business, Category } from '../types';
 import LoadingScreen from '../components/LoadingScreen';
 import Header from '../components/Header';
-import HeroSection from '../components/HeroSection';
 import ActionCards from '../components/ActionCards';
+import GoogleMapsSection from '../components/GoogleMapsSection';
 import FeaturedListings from '../components/FeaturedListings';
 import FeaturesSection from '../components/FeaturesSection';
 import CategorySection from '../components/CategorySection';
@@ -111,7 +111,7 @@ export default function Home() {
         <main>
           <ActionCards />
           
-          <HeroSection onSearch={handleSearch} />
+          <GoogleMapsSection businesses={businesses} onSearch={handleSearch} />
           
           {error && (
             <div className="container mx-auto px-4 py-8">
