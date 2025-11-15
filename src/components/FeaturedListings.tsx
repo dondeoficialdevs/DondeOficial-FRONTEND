@@ -36,8 +36,9 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
         </div>
 
         {businesses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {businesses.map((business) => (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {businesses.slice(0, 6).map((business) => (
               <div key={business.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group">
                 {/* Image Section */}
                 <div className="h-56 bg-linear-to-br from-blue-100 to-blue-200 relative overflow-hidden">
@@ -135,8 +136,22 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            
+            {/* Botón Ver Más */}
+            <div className="text-center mt-12">
+              <Link
+                href="/listings"
+                className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                <span>Ver Más</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+          </>
         ) : (
           <div className="text-center py-16">
             <div className="max-w-md mx-auto">
