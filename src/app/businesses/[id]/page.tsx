@@ -21,6 +21,7 @@ export default function BusinessDetail() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -144,12 +145,35 @@ export default function BusinessDetail() {
     }
   };
 
+  // Obtener imagen principal
+  const primaryImage = business?.images?.find(img => img.is_primary) || business?.images?.[0];
+  const otherImages = business?.images?.filter((img, idx) => 
+    !img.is_primary && (primaryImage ? img.id !== primaryImage.id : idx !== 0)
+  ) || [];
+
+  // Función para normalizar URLs de redes sociales
+  const normalizeSocialUrl = (url: string | undefined, platform: string) => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('@')) {
+      const username = url.substring(1);
+      const urlMap: { [key: string]: string } = {
+        facebook: `https://facebook.com/${username}`,
+        instagram: `https://instagram.com/${username}`,
+        tiktok: `https://tiktok.com/@${username}`,
+        youtube: `https://youtube.com/@${username}`,
+      };
+      return urlMap[platform] || url;
+    }
+    return `https://${platform}.com/${url}`;
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto"></div>
+          <p className="mt-6 text-xl text-gray-600 font-medium">Cargando información...</p>
         </div>
       </div>
     );
@@ -157,14 +181,23 @@ export default function BusinessDetail() {
 
   if (error || !business) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Negocio no encontrado</h1>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="text-center bg-white rounded-2xl shadow-xl p-12 max-w-md mx-4">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Negocio no encontrado</h1>
+          <p className="text-gray-600 mb-8">El negocio que buscas no existe o ha sido eliminado.</p>
           <Link
             href="/"
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
-            ← Volver al inicio
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver al inicio
           </Link>
         </div>
       </div>
@@ -172,105 +205,143 @@ export default function BusinessDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <Header />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="mb-6">
-          <nav className="flex items-center space-x-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-blue-600 transition-colors">
-              Inicio
+        <nav className="mb-6 flex items-center space-x-2 text-sm">
+          <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors font-semibold">
+            Inicio
           </Link>
-            <span>/</span>
-            <span className="text-gray-900">{business.name}</span>
-          </nav>
-        </div>
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+          <Link href="/listings" className="text-gray-700 hover:text-blue-600 transition-colors font-semibold">
+            Directorio
+          </Link>
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+          <span className="text-gray-900 font-bold truncate max-w-xs">{business.name}</span>
+        </nav>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Business Header with Gradient */}
-          <div className="p-8 md:p-12 bg-linear-to-r from-blue-600 via-blue-700 to-purple-700 text-white">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between">
-              <div className="flex-1 mb-6 md:mb-0">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                  {business.name}
-                </h1>
+        {/* Hero Section con Imagen Principal */}
+        <div className="relative mb-8 rounded-3xl overflow-hidden shadow-2xl">
+          {primaryImage ? (
+            <div className="relative h-[500px] md:h-[600px]">
+              <img
+                src={primaryImage.image_url}
+                alt={business.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/30"></div>
+              
+              {/* Contenido sobre la imagen */}
+              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
+                <div className="max-w-4xl">
+                  {business.category_name && (
+                    <span className="inline-block bg-white/30 backdrop-blur-md text-white text-sm font-bold px-5 py-2.5 rounded-full mb-4 border-2 border-white/40 shadow-lg">
+                      {business.category_name}
+                    </span>
+                  )}
+                  <h1 className="text-4xl md:text-6xl font-extrabold mb-4 text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] leading-tight">
+                    {business.name}
+                  </h1>
+                  {business.description && (
+                    <p className="text-lg md:text-xl text-white max-w-2xl line-clamp-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] font-medium leading-relaxed">
+                      {business.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Botones de acción flotantes */}
+              <div className="absolute top-6 right-6 flex flex-col gap-3">
+                <Link
+                  href={`/businesses/${business.id}/edit`}
+                  className="inline-flex items-center justify-center px-5 py-3 bg-white text-blue-700 rounded-xl hover:bg-blue-50 transition-all shadow-2xl font-bold border-2 border-white/50 backdrop-blur-sm group"
+                >
+                  <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Editar
+                </Link>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="inline-flex items-center justify-center px-5 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-2xl font-bold border-2 border-white/30 backdrop-blur-sm"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="h-[500px] md:h-[600px] bg-gradient-to-br from-blue-700 via-purple-700 to-indigo-800 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-black/20"></div>
+              <div className="text-center text-white p-8 relative z-10">
+                <svg className="w-24 h-24 mx-auto mb-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <h1 className="text-4xl md:text-6xl font-extrabold mb-4 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">{business.name}</h1>
                 {business.category_name && (
-                  <span className="inline-block bg-white bg-opacity-20 text-white text-sm font-medium px-4 py-2 rounded-full backdrop-blur-sm">
+                  <span className="inline-block bg-white/30 backdrop-blur-md text-white text-sm font-bold px-5 py-2.5 rounded-full border-2 border-white/40 shadow-lg">
                     {business.category_name}
                   </span>
                 )}
               </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                  <Link
-                    href={`/businesses/${business.id}/edit`}
-                    className="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all shadow-lg font-semibold"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Editar
-                  </Link>
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-lg font-semibold"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Eliminar
-                  </button>
-                  {business.website && (
-                    <a
-                      href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all shadow-lg font-semibold"
-                    >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l3-3m-3 3l-3-3m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    Visitar Web
-                    </a>
-                  )}
-                  {business.phone && (
-                    <a
-                      href={`tel:${business.phone}`}
-                    className="inline-flex items-center justify-center px-6 py-3 bg-white text-green-600 rounded-lg hover:bg-gray-100 transition-all shadow-lg font-semibold"
-                    >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    Llamar
-                    </a>
-                  )}
-              </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Business Content */}
-          <div className="p-8 md:p-12">
+        {/* Contenido Principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Columna Principal */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Descripción */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900">Acerca de</h2>
+              </div>
+              <p className="text-gray-800 leading-relaxed text-lg font-medium">
+                {business.description}
+              </p>
+            </div>
+
             {/* Galería de Imágenes */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Galería de Imágenes</h2>
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900">Galería</h2>
+                </div>
                 <button
                   onClick={() => setShowAddImages(!showAddImages)}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg hover:shadow-xl"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                   </svg>
-                  {showAddImages ? 'Cancelar' : 'Agregar Imágenes'}
+                  {showAddImages ? 'Cancelar' : 'Agregar'}
                 </button>
               </div>
 
               {/* Sección para agregar imágenes */}
               {showAddImages && (
-                <div className="mb-6 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="mb-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-dashed border-blue-300">
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-800 mb-2">
                       Seleccionar imágenes (máximo 10 en total)
                     </label>
                     <input
@@ -278,30 +349,27 @@ export default function BusinessDetail() {
                       multiple
                       accept="image/jpeg,image/jpg,image/png"
                       onChange={handleImageChange}
-                      aria-label="Seleccionar imágenes para agregar al negocio"
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      className="block w-full text-sm text-gray-700 font-medium file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer"
                     />
-                    <p className="mt-2 text-xs text-gray-500">
-                      Formatos permitidos: JPG, PNG. Tamaño máximo: 5MB por imagen.
+                    <p className="mt-2 text-xs text-gray-600 font-medium">
+                      Formatos: JPG, PNG. Tamaño máximo: 5MB por imagen.
                     </p>
                   </div>
 
                   {imagePreviews.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Vista previa:</p>
+                      <p className="text-sm font-bold text-gray-800 mb-3">Vista previa:</p>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {imagePreviews.map((preview, index) => (
                           <div key={index} className="relative group">
                             <img
                               src={preview}
                               alt={`Preview ${index + 1}`}
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full h-32 object-cover rounded-lg shadow-md"
                             />
                             <button
                               onClick={() => removeImage(index)}
-                              aria-label={`Eliminar imagen ${index + 1}`}
-                              title="Eliminar imagen"
-                              className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -317,7 +385,7 @@ export default function BusinessDetail() {
                     <button
                       onClick={handleUploadImages}
                       disabled={uploadingImages}
-                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {uploadingImages ? 'Subiendo...' : `Subir ${newImages.length} imagen${newImages.length > 1 ? 'es' : ''}`}
                     </button>
@@ -325,28 +393,24 @@ export default function BusinessDetail() {
                 </div>
               )}
 
-              {business.images && business.images.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {business.images.map((image) => (
-                    <div key={image.id} className="relative group overflow-hidden rounded-lg">
+              {otherImages.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {otherImages.map((image) => (
+                    <div key={image.id} className="relative group overflow-hidden rounded-xl shadow-lg">
                       <img
                         src={image.image_url}
                         alt={`${business.name} - Imagen ${image.id}`}
-                        className="w-full h-64 object-cover transition-transform group-hover:scale-105"
+                        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110 cursor-pointer"
+                        onClick={() => setSelectedImageIndex(otherImages.findIndex(img => img.id === image.id))}
                       />
-                      {image.is_primary && (
-                        <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded">
-                          Principal
-                        </span>
-                      )}
                       <button
                         onClick={() => handleDeleteImage(image.id)}
                         disabled={deletingImageId === image.id}
-                        className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg disabled:opacity-50"
                         title="Eliminar imagen"
                       >
                         {deletingImageId === image.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                         ) : (
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -357,147 +421,181 @@ export default function BusinessDetail() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-gray-500">No hay imágenes disponibles</p>
+                  <p className="text-gray-700 font-bold">No hay imágenes adicionales</p>
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-8">
-                {/* Description */}
-                <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Redes Sociales */}
+            {(business.facebook_url || business.instagram_url || business.tiktok_url || business.youtube_url) && (
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+                <div className="flex items-center mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Síguenos</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {business.facebook_url && (
+                    <a
+                      href={normalizeSocialUrl(business.facebook_url, 'facebook') || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center px-4 py-3 bg-[#1877F2] text-white rounded-xl hover:bg-[#166FE5] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
+                    >
+                      <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      <span className="font-semibold text-sm">Facebook</span>
+                    </a>
+                  )}
+                  {business.instagram_url && (
+                    <a
+                      href={normalizeSocialUrl(business.instagram_url, 'instagram') || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center px-4 py-3 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 text-white rounded-xl hover:opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
+                    >
+                      <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      </svg>
+                      <span className="font-semibold text-sm">Instagram</span>
+                    </a>
+                  )}
+                  {business.tiktok_url && (
+                    <a
+                      href={normalizeSocialUrl(business.tiktok_url, 'tiktok') || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center px-4 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
+                    >
+                      <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                      </svg>
+                      <span className="font-semibold text-sm">TikTok</span>
+                    </a>
+                  )}
+                  {business.youtube_url && (
+                    <a
+                      href={normalizeSocialUrl(business.youtube_url, 'youtube') || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center px-4 py-3 bg-[#FF0000] text-white rounded-xl hover:bg-[#CC0000] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
+                    >
+                      <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                      <span className="font-semibold text-sm">YouTube</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Información de Contacto */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Contacto</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {business.phone && (
+                  <a
+                    href={`tel:${business.phone}`}
+                    className="flex items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl hover:from-green-100 hover:to-emerald-100 transition-all group"
+                  >
+                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900">Acerca de</h2>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed">
-                    {business.description}
-                  </p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-bold mb-1">Teléfono</p>
+                      <p className="text-gray-900 font-bold text-lg">{business.phone}</p>
+                    </div>
+                  </a>
+                )}
+                
+                {business.email && (
+                  <a
+                    href={`mailto:${business.email}`}
+                    className="flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all group"
+                  >
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-bold mb-1">Email</p>
+                      <p className="text-gray-900 font-bold text-base truncate">{business.email}</p>
+                    </div>
+                  </a>
+                )}
 
-                {/* Contact Information */}
-                <div>
-                  <div className="flex items-center mb-4">
-                    <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center mr-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {business.address && (
+                  <div className="flex items-start p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
+                    <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mr-3 shrink-0">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900">Información de contacto</h2>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {business.address && (
-                      <div className="bg-gray-50 rounded-lg p-4 flex items-start hover:bg-gray-100 transition-colors">
-                        <svg className="w-6 h-6 text-blue-600 mr-3 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <div>
-                          <p className="font-semibold text-gray-900 mb-1">Dirección</p>
-                          <p className="text-gray-700">{business.address}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {business.phone && (
-                      <div className="bg-gray-50 rounded-lg p-4 flex items-center hover:bg-gray-100 transition-colors">
-                        <svg className="w-6 h-6 text-green-600 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        <div>
-                          <p className="font-semibold text-gray-900 mb-1">Teléfono</p>
-                          <a
-                            href={`tel:${business.phone}`}
-                            className="text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            {business.phone}
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {business.email && (
-                      <div className="bg-gray-50 rounded-lg p-4 flex items-center hover:bg-gray-100 transition-colors">
-                        <svg className="w-6 h-6 text-purple-600 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        <div>
-                          <p className="font-semibold text-gray-900 mb-1">Email</p>
-                          <a
-                            href={`mailto:${business.email}`}
-                            className="text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            {business.email}
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-8">
-                {/* Opening Hours */}
-                {business.opening_hours && (
-                  <div className="bg-linear-to-br from-orange-50 to-red-50 rounded-xl p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center mr-3">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <h2 className="text-2xl font-bold text-gray-900">Horarios</h2>
-                    </div>
-                    <div className="bg-white rounded-lg p-4">
-                      <pre className="text-gray-700 whitespace-pre-line font-sans">
-                        {business.opening_hours}
-                      </pre>
+                    <div>
+                      <p className="text-xs text-gray-600 font-bold mb-1">Dirección</p>
+                      <p className="text-gray-900 font-bold text-sm leading-relaxed">{business.address}</p>
                     </div>
                   </div>
                 )}
 
-                {/* Location Map */}
-                {(business.latitude && business.longitude) && (
-                  <div className="bg-linear-to-br from-indigo-50 to-purple-50 rounded-xl p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center mr-3">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                      </div>
-                      <h2 className="text-2xl font-bold text-gray-900">Ubicación</h2>
-                    </div>
-                    <div className="bg-gray-200 rounded-lg h-64 flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-linear-to-br from-blue-400 to-indigo-600 opacity-20"></div>
-                      <div className="relative z-10 text-center p-6 bg-white bg-opacity-90 rounded-lg">
-                        <svg className="w-16 h-16 text-blue-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <p className="text-gray-700 font-semibold mb-2">
-                          Ver en el mapa
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {business.latitude.toFixed(4)}, {business.longitude.toFixed(4)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                {business.website && (
+                  <a
+                    href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 w-full"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Visitar Sitio Web
+                  </a>
                 )}
               </div>
             </div>
+
+            {/* Horarios */}
+            {business.opening_hours && (
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+                <div className="flex items-center mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Horarios</h3>
+                </div>
+                <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-5 border border-orange-200">
+                  <pre className="text-gray-800 whitespace-pre-line font-semibold text-sm leading-relaxed">
+                    {business.opening_hours}
+                  </pre>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -506,24 +604,29 @@ export default function BusinessDetail() {
 
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirmar eliminación</h3>
-            <p className="text-gray-700 mb-6">
-              ¿Estás seguro de que deseas eliminar el negocio <strong>{business?.name}</strong>? 
-              Esta acción no se puede deshacer y también se eliminarán todas las imágenes asociadas.
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">Confirmar eliminación</h3>
+            <p className="text-gray-700 mb-8 text-center">
+              ¿Estás seguro de que deseas eliminar el negocio <strong className="text-red-600">{business?.name}</strong>? 
+              Esta acción no se puede deshacer.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 transition-all font-semibold"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting ? 'Eliminando...' : 'Eliminar'}
               </button>

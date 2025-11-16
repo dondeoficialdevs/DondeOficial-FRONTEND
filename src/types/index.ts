@@ -19,6 +19,10 @@ export interface Business {
   latitude?: number;
   longitude?: number;
   images?: BusinessImage[];
+  facebook_url?: string;
+  instagram_url?: string;
+  tiktok_url?: string;
+  youtube_url?: string;
   created_at: string;
   updated_at: string;
 }
