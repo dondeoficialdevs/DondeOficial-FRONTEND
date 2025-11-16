@@ -5,7 +5,7 @@ import { businessApi, categoryApi } from '../../lib/api';
 import { Business, Category } from '../../types';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import Link from 'next/link';
+import BusinessDetailModal from '../../components/BusinessDetailModal';
 
 export default function ListingsPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -20,6 +20,8 @@ export default function ListingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<'categories' | 'featured'>('featured');
+  const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadInitialData();
@@ -522,12 +524,15 @@ export default function ListingsPage() {
                         </div>
 
                         {/* Button */}
-                        <Link
-                          href={`/businesses/${business.id}`}
+                        <button
+                          onClick={() => {
+                            setSelectedBusinessId(business.id);
+                            setIsModalOpen(true);
+                          }}
                           className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm"
                         >
                           VER OFERTA
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   );
@@ -543,6 +548,16 @@ export default function ListingsPage() {
       </main>
 
       <Footer />
+
+      {/* Business Detail Modal */}
+      <BusinessDetailModal
+        businessId={selectedBusinessId}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBusinessId(null);
+        }}
+      />
     </div>
   );
 }

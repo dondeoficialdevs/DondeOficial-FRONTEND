@@ -16,6 +16,7 @@ import VideoSection from '../components/VideoSection';
 import NewsletterSection from '../components/NewsletterSection';
 import BlogSection from '../components/BlogSection';
 import Footer from '../components/Footer';
+import BusinessDetailModal from '../components/BusinessDetailModal';
 
 // Importar componentes que requieren APIs del navegador solo en el cliente
 const GoogleMapsSection = dynamic(() => import('../components/GoogleMapsSection'), { ssr: false });
@@ -28,6 +29,8 @@ export default function Home() {
   const [searching, setSearching] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // Mostrar loading screen por 2 segundos
@@ -129,7 +132,14 @@ export default function Home() {
               </div>
             </div>
           )}
-          <FeaturedListings businesses={businesses} loading={loading || searching} />
+          <FeaturedListings 
+            businesses={businesses} 
+            loading={loading || searching}
+            onBusinessClick={(businessId) => {
+              setSelectedBusinessId(businessId);
+              setIsModalOpen(true);
+            }}
+          />
           
           <FeaturesSection />
           
@@ -152,6 +162,16 @@ export default function Home() {
         <Footer />
 
         <PWAInstaller />
+
+        {/* Business Detail Modal */}
+        <BusinessDetailModal
+          businessId={selectedBusinessId}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedBusinessId(null);
+          }}
+        />
       </div>
     </>
   );

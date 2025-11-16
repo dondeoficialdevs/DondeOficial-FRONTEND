@@ -6,9 +6,10 @@ import Link from 'next/link';
 interface FeaturedListingsProps {
   businesses: Business[];
   loading: boolean;
+  onBusinessClick?: (businessId: number) => void;
 }
 
-export default function FeaturedListings({ businesses, loading }: FeaturedListingsProps) {
+export default function FeaturedListings({ businesses, loading, onBusinessClick }: FeaturedListingsProps) {
   if (loading) {
     return (
       <section className="py-20 bg-linear-to-br from-gray-50 to-gray-100">
@@ -121,12 +122,21 @@ export default function FeaturedListings({ businesses, loading }: FeaturedListin
 
                   {/* Action Buttons */}
                   <div className="flex justify-between items-center">
-                    <Link
-                      href={`/businesses/${business.id}`}
-                      className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                    >
-                      Ver Detalles
-                    </Link>
+                    {onBusinessClick ? (
+                      <button
+                        onClick={() => onBusinessClick(business.id)}
+                        className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      >
+                        Ver Detalles
+                      </button>
+                    ) : (
+                      <Link
+                        href={`/businesses/${business.id}`}
+                        className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      >
+                        Ver Detalles
+                      </Link>
+                    )}
                     <button className="flex items-center space-x-2 text-gray-400 hover:text-red-500 transition-colors duration-200 group">
                       <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
