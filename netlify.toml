@@ -10,7 +10,14 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Redirect rules for SPA behavior
+# Asegurar que los archivos estáticos se sirvan correctamente (debe ir ANTES de la regla catch-all)
+[[redirects]]
+  from = "/images/*"
+  to = "/images/:splat"
+  status = 200
+  force = true
+
+# Redirect rules for SPA behavior (solo para rutas que no sean archivos estáticos)
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -34,5 +41,11 @@
 # Cache images
 [[headers]]
   for = "/_next/image/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache para imágenes en public/images
+[[headers]]
+  for = "/images/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"

@@ -39,6 +39,7 @@ export default function LoadingScreen() {
                 className="object-contain drop-shadow-2xl"
                 priority
                 sizes="(max-width: 640px) 192px, (max-width: 768px) 256px, (max-width: 1024px) 320px, 384px"
+                unoptimized={true}
               />
             </div>
           </div>

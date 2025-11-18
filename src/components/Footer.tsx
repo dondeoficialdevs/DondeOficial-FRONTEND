@@ -46,6 +46,7 @@ export default function Footer() {
                   fill
                   className="object-contain"
                   sizes="(max-width: 640px) 40px, (max-width: 768px) 48px, 56px"
+                  unoptimized={true}
                 />
               </div>
               <span className="text-xl sm:text-2xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent">
