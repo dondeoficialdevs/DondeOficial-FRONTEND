@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Business } from '../types';
 import { businessApi } from '../lib/api';
+import { useFavorites } from '@/hooks/useFavorites';
 
 interface BusinessDetailModalProps {
   businessId: number | null;
@@ -18,6 +19,7 @@ export default function BusinessDetailModal({ businessId, isOpen, onClose }: Bus
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isInitialized, setIsInitialized] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     if (isOpen && businessId) {
@@ -280,6 +282,26 @@ export default function BusinessDetailModal({ businessId, isOpen, onClose }: Bus
                   <div className="bg-white border border-gray-200 rounded-xl p-4">
                     <h4 className="text-sm font-bold text-gray-900 mb-3">Contacto</h4>
                     <div className="space-y-3">
+                      {/* Botón de Favoritos */}
+                      <button
+                        onClick={() => business && toggleFavorite(business)}
+                        className={`w-full flex items-center justify-center px-4 py-3 rounded-lg transition-all font-bold text-sm ${
+                          business && isFavorite(business.id)
+                            ? 'bg-red-500 text-white hover:bg-red-600'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-300'
+                        }`}
+                        title={business && isFavorite(business.id) ? 'Eliminar de favoritos' : 'Agregar a favoritos'}
+                      >
+                        <svg 
+                          className="w-5 h-5 mr-2" 
+                          fill={business && isFavorite(business.id) ? 'currentColor' : 'none'} 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        {business && isFavorite(business.id) ? 'Eliminar de Favoritos' : 'Agregar a Favoritos'}
+                      </button>
                       {business.phone && (
                         <a
                           href={`tel:${business.phone}`}
