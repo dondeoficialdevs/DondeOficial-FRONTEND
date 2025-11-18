@@ -64,3 +64,20 @@ export interface NewsletterSubscriber {
   email: string;
   subscribed_at: string;
 }
+
+export interface User {
+  id: number;
+  email: string;
+  full_name: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}

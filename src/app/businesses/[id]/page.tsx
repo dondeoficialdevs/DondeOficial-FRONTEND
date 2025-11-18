@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { businessApi } from '@/lib/api';
+import { businessApi, authApi } from '@/lib/api';
 import { Business, BusinessImage } from '@/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -22,8 +22,10 @@ export default function BusinessDetail() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    setIsAuthenticated(authApi.isAuthenticated());
     if (params.id) {
       loadBusiness(Number(params.id));
     }
@@ -256,27 +258,29 @@ export default function BusinessDetail() {
                 </div>
               </div>
 
-              {/* Botones de acción flotantes */}
-              <div className="absolute top-6 right-6 flex flex-col gap-3">
-                <Link
-                  href={`/businesses/${business.id}/edit`}
-                  className="inline-flex items-center justify-center px-5 py-3 bg-white text-blue-700 rounded-xl hover:bg-blue-50 transition-all shadow-2xl font-bold border-2 border-white/50 backdrop-blur-sm group"
-                >
-                  <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Editar
-                </Link>
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="inline-flex items-center justify-center px-5 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-2xl font-bold border-2 border-white/30 backdrop-blur-sm"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Eliminar
-                </button>
-              </div>
+              {/* Botones de acción flotantes - Solo para usuarios autenticados */}
+              {isAuthenticated && (
+                <div className="absolute top-6 right-6 flex flex-col gap-3">
+                  <Link
+                    href={`/businesses/${business.id}/edit`}
+                    className="inline-flex items-center justify-center px-5 py-3 bg-white text-blue-700 rounded-xl hover:bg-blue-50 transition-all shadow-2xl font-bold border-2 border-white/50 backdrop-blur-sm group"
+                  >
+                    <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar
+                  </Link>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center justify-center px-5 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-2xl font-bold border-2 border-white/30 backdrop-blur-sm"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="h-[500px] md:h-[600px] bg-gradient-to-br from-blue-700 via-purple-700 to-indigo-800 flex items-center justify-center relative overflow-hidden">
@@ -326,15 +330,17 @@ export default function BusinessDetail() {
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900">Galería</h2>
                 </div>
-                <button
-                  onClick={() => setShowAddImages(!showAddImages)}
-                  className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg hover:shadow-xl"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  {showAddImages ? 'Cancelar' : 'Agregar'}
-                </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={() => setShowAddImages(!showAddImages)}
+                    className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    {showAddImages ? 'Cancelar' : 'Agregar'}
+                  </button>
+                )}
               </div>
 
               {/* Sección para agregar imágenes */}
@@ -403,20 +409,22 @@ export default function BusinessDetail() {
                         className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110 cursor-pointer"
                         onClick={() => setSelectedImageIndex(otherImages.findIndex(img => img.id === image.id))}
                       />
-                      <button
-                        onClick={() => handleDeleteImage(image.id)}
-                        disabled={deletingImageId === image.id}
-                        className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg disabled:opacity-50"
-                        title="Eliminar imagen"
-                      >
-                        {deletingImageId === image.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        )}
-                      </button>
+                      {isAuthenticated && (
+                        <button
+                          onClick={() => handleDeleteImage(image.id)}
+                          disabled={deletingImageId === image.id}
+                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg disabled:opacity-50"
+                          title="Eliminar imagen"
+                        >
+                          {deletingImageId === image.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          )}
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

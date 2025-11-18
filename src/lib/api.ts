@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { Business, BusinessImage, Category, ApiResponse, BusinessFilters, Lead, NewsletterSubscriber } from '@/types';
+import { Business, BusinessImage, Category, ApiResponse, BusinessFilters, Lead, NewsletterSubscriber, LoginResponse, User } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -10,59 +10,189 @@ const api = axios.create({
   },
 });
 
-// Interceptor para manejar errores
+// Función para obtener tokens del sessionStorage
+const getTokens = () => {
+  if (typeof window === 'undefined') return null;
+  const accessToken = sessionStorage.getItem('accessToken');
+  const refreshToken = sessionStorage.getItem('refreshToken');
+  return accessToken && refreshToken ? { accessToken, refreshToken } : null;
+};
+
+// Función para guardar tokens en sessionStorage
+const setTokens = (tokens: { accessToken: string; refreshToken: string }) => {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem('accessToken', tokens.accessToken);
+  sessionStorage.setItem('refreshToken', tokens.refreshToken);
+};
+
+// Función para eliminar tokens del sessionStorage
+const clearTokens = () => {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem('accessToken');
+  sessionStorage.removeItem('refreshToken');
+  sessionStorage.removeItem('user');
+};
+
+// Interceptor para agregar token a las peticiones
+api.interceptors.request.use(
+  (config) => {
+    const tokens = getTokens();
+    if (tokens && config.headers) {
+      config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor para manejar errores y refresh token
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Interceptor combinado para manejar errores y refresh token
 api.interceptors.response.use(
   (response) => response,
-  (error: unknown) => {
-    // Si hay un error de red o el servidor no responde
-    if (error instanceof AxiosError && !error.response) {
-      const errorMessage = error.message || 'Network error';
-      console.error('❌ Network error:', errorMessage);
-      console.error('📍 API URL:', API_URL);
-      console.error('🔍 Error code:', error.code);
-      
-      // Mensaje más descriptivo
-      let message = 'No se pudo conectar con el servidor. ';
-      if (error.code === 'ECONNREFUSED') {
-        message += 'El servidor backend no está disponible. Verifica que esté corriendo en ' + API_URL;
-      } else if (error.code === 'ERR_NETWORK') {
-        message += 'Error de red. Verifica tu conexión a internet y que el backend esté accesible.';
-      } else if (error.code === 'ETIMEDOUT') {
-        message += 'El servidor tardó demasiado en responder. Verifica que el backend esté funcionando.';
-      } else {
-        message += 'Verifica que el backend esté corriendo y accesible en ' + API_URL;
-      }
-      
-      return Promise.reject(new Error(message));
-    }
-    
-    // Si hay un error del servidor, devolver el mensaje del servidor
-    if (error instanceof AxiosError && error.response) {
-      const status = error.response.status;
-      const serverMessage = error.response?.data?.message || error.message || 'An error occurred';
-      
-      console.error(`❌ API Error [${status}]:`, serverMessage);
-      console.error('📍 URL:', error.config?.url);
-      
-      // Mensajes más amigables según el código de estado
-      if (status === 500) {
-        const errorData = error.response?.data;
-        const message = errorData?.error || errorData?.message || serverMessage;
-        const code = errorData?.code;
-        // Construir mensaje más informativo
-        let fullMessage = message || 'Error interno del servidor. Por favor, intenta más tarde.';
-        if (code) {
-          fullMessage += ` (Código: ${code})`;
+  async (error: unknown) => {
+    // Manejo de refresh token para errores 401
+    if (error instanceof AxiosError) {
+      const originalRequest = error.config as any;
+
+      // Si el error es 401 y no es una petición de login/refresh
+      if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+        if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+          // Para login/refresh, continuar con el manejo de errores normal
+        } else {
+          if (isRefreshing) {
+            // Si ya se está refrescando, agregar a la cola
+            return new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            })
+              .then((token) => {
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${token}`;
+                }
+                return api(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
+          }
+
+          originalRequest._retry = true;
+          isRefreshing = true;
+
+          const tokens = getTokens();
+          if (!tokens?.refreshToken) {
+            clearTokens();
+            processQueue(error, null);
+            isRefreshing = false;
+            // Redirigir a login si estamos en una página protegida
+            if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+              window.location.href = '/admin/login';
+            }
+            // Continuar con manejo de errores normal
+          } else {
+            try {
+              const response = await axios.post<ApiResponse<{ accessToken: string }>>(
+                `${API_URL}/auth/refresh`,
+                { refreshToken: tokens.refreshToken }
+              );
+
+              const { accessToken } = response.data.data;
+              const newTokens = { ...tokens, accessToken };
+              setTokens(newTokens);
+
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+              }
+
+              processQueue(null, accessToken);
+              isRefreshing = false;
+
+              return api(originalRequest);
+            } catch (refreshError) {
+              clearTokens();
+              processQueue(refreshError, null);
+              isRefreshing = false;
+              // Redirigir a login
+              if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+                window.location.href = '/admin/login';
+              }
+              // Continuar con manejo de errores normal
+            }
+          }
         }
-        console.error('❌ Server Error Details:', errorData);
-        return Promise.reject(new Error(fullMessage));
-      } else if (status === 404) {
-        return Promise.reject(new Error('Recurso no encontrado.'));
-      } else if (status === 400) {
-        return Promise.reject(new Error(serverMessage || 'Datos inválidos.'));
+      }
+
+      // Manejo de errores generales
+      // Si hay un error de red o el servidor no responde
+      if (!error.response) {
+        const errorMessage = error.message || 'Network error';
+        console.error('❌ Network error:', errorMessage);
+        console.error('📍 API URL:', API_URL);
+        console.error('🔍 Error code:', error.code);
+        
+        // Mensaje más descriptivo
+        let message = 'No se pudo conectar con el servidor. ';
+        if (error.code === 'ECONNREFUSED') {
+          message += 'El servidor backend no está disponible. Verifica que esté corriendo en ' + API_URL;
+        } else if (error.code === 'ERR_NETWORK') {
+          message += 'Error de red. Verifica tu conexión a internet y que el backend esté accesible.';
+        } else if (error.code === 'ETIMEDOUT') {
+          message += 'El servidor tardó demasiado en responder. Verifica que el backend esté funcionando.';
+        } else {
+          message += 'Verifica que el backend esté corriendo y accesible en ' + API_URL;
+        }
+        
+        return Promise.reject(new Error(message));
       }
       
-      return Promise.reject(new Error(serverMessage));
+      // Si hay un error del servidor, devolver el mensaje del servidor
+      if (error.response) {
+        const status = error.response.status;
+        const serverMessage = error.response?.data?.message || error.message || 'An error occurred';
+        
+        console.error(`❌ API Error [${status}]:`, serverMessage);
+        console.error('📍 URL:', error.config?.url);
+        
+        // Mensajes más amigables según el código de estado
+        if (status === 500) {
+          const errorData = error.response?.data;
+          const message = errorData?.error || errorData?.message || serverMessage;
+          const code = errorData?.code;
+          // Construir mensaje más informativo
+          let fullMessage = message || 'Error interno del servidor. Por favor, intenta más tarde.';
+          if (code) {
+            fullMessage += ` (Código: ${code})`;
+          }
+          console.error('❌ Server Error Details:', errorData);
+          return Promise.reject(new Error(fullMessage));
+        } else if (status === 404) {
+          return Promise.reject(new Error('Recurso no encontrado.'));
+        } else if (status === 400) {
+          return Promise.reject(new Error(serverMessage || 'Datos inválidos.'));
+        } else if (status === 403) {
+          return Promise.reject(new Error('No tienes permisos para realizar esta acción.'));
+        }
+        
+        return Promise.reject(new Error(serverMessage));
+      }
     }
     
     // Si es otro tipo de error
@@ -263,5 +393,75 @@ export const healthApi = {
   check: async (): Promise<{ message: string; status: string }> => {
     const response = await api.get('/health');
     return response.data;
+  },
+};
+
+// Autenticación
+export const authApi = {
+  // Iniciar sesión
+  login: async (email: string, password: string): Promise<LoginResponse> => {
+    const response = await api.post<ApiResponse<LoginResponse>>('/auth/login', {
+      email,
+      password,
+    });
+    const data = response.data.data;
+    setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken });
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+    }
+    return data;
+  },
+
+  // Cerrar sesión
+  logout: async (): Promise<void> => {
+    const tokens = getTokens();
+    if (tokens?.refreshToken) {
+      try {
+        await api.post('/auth/logout', { refreshToken: tokens.refreshToken });
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+      }
+    }
+    clearTokens();
+  },
+
+  // Refrescar access token
+  refreshToken: async (): Promise<string> => {
+    const tokens = getTokens();
+    if (!tokens?.refreshToken) {
+      throw new Error('No hay refresh token disponible');
+    }
+    const response = await api.post<ApiResponse<{ accessToken: string }>>('/auth/refresh', {
+      refreshToken: tokens.refreshToken,
+    });
+    const { accessToken } = response.data.data;
+    setTokens({ accessToken, refreshToken: tokens.refreshToken });
+    return accessToken;
+  },
+
+  // Verificar token
+  verify: async (): Promise<User> => {
+    const response = await api.get<ApiResponse<User>>('/auth/verify');
+    return response.data.data;
+  },
+
+  // Cambiar contraseña
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    await api.post('/auth/change-password', {
+      currentPassword,
+      newPassword,
+    });
+  },
+
+  // Obtener usuario actual
+  getCurrentUser: (): User | null => {
+    if (typeof window === 'undefined') return null;
+    const userStr = sessionStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  },
+
+  // Verificar si está autenticado
+  isAuthenticated: (): boolean => {
+    return getTokens() !== null;
   },
 };

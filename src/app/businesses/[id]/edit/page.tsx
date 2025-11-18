@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { businessApi, categoryApi } from '@/lib/api';
+import { businessApi, categoryApi, authApi } from '@/lib/api';
 import { Business, Category } from '@/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -28,12 +28,20 @@ export default function EditBusinessPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Verificar autenticación
+    if (!authApi.isAuthenticated()) {
+      router.push('/admin/login');
+      return;
+    }
+    setIsAuthenticated(true);
+    
     if (params.id) {
       loadData(Number(params.id));
     }
-  }, [params.id]);
+  }, [params.id, router]);
 
   const loadData = async (id: number) => {
     try {
@@ -144,12 +152,14 @@ export default function EditBusinessPage() {
     }
   };
 
-  if (loading) {
+  if (!isAuthenticated || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <p className="mt-4 text-gray-600">
+            {!isAuthenticated ? 'Verificando autenticación...' : 'Cargando...'}
+          </p>
         </div>
       </div>
     );
