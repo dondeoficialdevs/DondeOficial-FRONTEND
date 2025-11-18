@@ -50,16 +50,16 @@ api.interceptors.request.use(
 // Interceptor para manejar errores y refresh token
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
+  resolve: (value?: string) => void;
+  reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(token || undefined);
     }
   });
   failedQueue = [];
@@ -71,7 +71,8 @@ api.interceptors.response.use(
   async (error: unknown) => {
     // Manejo de refresh token para errores 401
     if (error instanceof AxiosError) {
-      const originalRequest = error.config as any;
+      type RequestConfig = NonNullable<AxiosError['config']> & { _retry?: boolean };
+      const originalRequest = error.config as RequestConfig | undefined;
 
       // Si el error es 401 y no es una petición de login/refresh
       if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
