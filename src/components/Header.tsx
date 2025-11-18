@@ -22,7 +22,10 @@ export default function Header() {
                   className="object-contain"
                   priority
                   sizes="(max-width: 640px) 40px, (max-width: 768px) 48px, 56px"
+                  unoptimized={false}
                 />
+                {/* Fallback text si la imagen no carga */}
+                <span className="sr-only">DondeOficial</span>
               </div>
             </Link>
           </div>
