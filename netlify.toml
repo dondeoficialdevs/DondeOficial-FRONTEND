@@ -32,20 +32,47 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Cache static assets
+# NO cachear HTML - Siempre buscar versión nueva
 [[headers]]
-  for = "/static/*"
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+
+# NO cachear el service worker
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+
+# Cache corto para JS y CSS de Next.js (1 hora) para permitir actualizaciones
+[[headers]]
+  for = "/_next/static/chunks/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/_next/static/chunks/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+# Cache largo para assets estáticos inmutables
+[[headers]]
+  for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Cache images
-[[headers]]
-  for = "/_next/image/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-# Cache para imágenes en public/images
+# Cache para imágenes estáticas (1 día para permitir actualizaciones)
 [[headers]]
   for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, must-revalidate"
+
+# Cache largo para otros assets estáticos
+[[headers]]
+  for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"

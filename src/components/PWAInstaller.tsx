@@ -24,12 +24,43 @@ export default function PWAInstaller() {
     setIsIOS(isIOSDevice);
     setIsAndroid(isAndroidDevice);
 
-    // Register service worker
+    // Register service worker con actualización automática
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('/sw.js', { updateViaCache: 'none' }) // No cachear el SW
         .then((registration) => {
           console.log('Service Worker registered:', registration);
+
+          // Verificar actualizaciones cada hora
+          setInterval(() => {
+            registration.update();
+          }, 60 * 60 * 1000);
+
+          // Escuchar actualizaciones del service worker
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Hay una nueva versión disponible
+                  console.log('Nueva versión del service worker disponible');
+                  // Forzar actualización inmediata
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  // Recargar la página para aplicar cambios
+                  window.location.reload();
+                }
+              });
+            }
+          });
+
+          // Escuchar cuando el service worker toma control
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
         })
         .catch((error) => {
           console.error('Service Worker registration failed:', error);

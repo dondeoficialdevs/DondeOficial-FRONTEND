@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import dynamic from "next/dynamic";
+
+// Importar UpdateNotification solo en el cliente
+const UpdateNotification = dynamic(() => import("@/components/UpdateNotification"), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,10 +59,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <head>
+        {/* Prevenir caché del navegador */}
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <UpdateNotification />
       </body>
     </html>
   );
