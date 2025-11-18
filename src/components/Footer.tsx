@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { newsletterApi } from '@/lib/api';
 
 export default function Footer() {
@@ -37,11 +38,17 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 lg:col-span-2">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">DO</span>
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-6">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0">
+                <Image
+                  src="/images/logo/Logo_Dondel.png"
+                  alt="DondeOficial Logo"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 640px) 40px, (max-width: 768px) 48px, 56px"
+                />
               </div>
-              <span className="text-2xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <span className="text-xl sm:text-2xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent">
                 DondeOficial
               </span>
             </div>

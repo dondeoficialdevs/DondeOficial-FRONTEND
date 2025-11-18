@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -12,13 +13,17 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-linear-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">DO</span>
+            <Link href="/" className="flex items-center">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0">
+                <Image
+                  src="/images/logo/Logo_Dondel.png"
+                  alt="DondeOficial Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                  sizes="(max-width: 640px) 40px, (max-width: 768px) 48px, 56px"
+                />
               </div>
-              <span className="text-2xl font-bold bg-linear-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-              DondeOficial
-              </span>
             </Link>
           </div>
 
