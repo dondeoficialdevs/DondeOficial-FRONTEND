@@ -492,7 +492,7 @@ export default function ListingsContent() {
                   const hasDiscount = Math.random() > 0.5;
                   const discountPercent = hasDiscount ? Math.floor(Math.random() * 40) + 20 : 0;
                   const originalPrice = hasDiscount ? Math.floor(Math.random() * 300000) + 200000 : 0;
-                  const currentPrice = hasDiscount ? Math.floor(originalPrice * (1 - discountPercent / 100)) : Math.floor(Math.random() * 200000) + 50000);
+                  const currentPrice = hasDiscount ? Math.floor(originalPrice * (1 - discountPercent / 100)) : Math.floor(Math.random() * 200000) + 50000;
                   const soldCount = Math.floor(Math.random() * 50) + 10;
                   const showBanner = Math.random() > 0.7;
                   const bannerText = showBanner ? (Math.random() > 0.5 ? 'TENDENCIAS DE NOVIEMBRE' : 'DESTINOS TOP') : '';
