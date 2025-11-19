@@ -49,9 +49,13 @@ export default function ActionCards() {
               <div className="flex items-start justify-between gap-4">
                 {/* Icono y texto principal */}
                 <div className="flex items-center gap-4 flex-1">
-                  {/* Icono WhatsApp */}
-                  <div className="shrink-0 w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border border-white/50">
-                    <svg className="w-9 h-9" fill="#FF6B35" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 1px rgba(255, 107, 53, 0.4))' }}>
+                  {/* Icono WhatsApp - Mejorado */}
+                  <div className="shrink-0 w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 border-2 border-green-400/30 relative overflow-hidden">
+                    {/* Efecto de brillo verde sutil */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ boxShadow: '0 0 20px rgba(37, 211, 102, 0.4)' }}></div>
+                    <svg className="w-10 h-10 relative z-10" fill="#25D366" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 2px 4px rgba(37, 211, 102, 0.3))' }}>
                       <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.49 1.32 5.01L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm.01 18.05c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.7-8.24 8.24-8.24s8.24 3.7 8.24 8.24-3.69 8.24-8.23 8.24z"/>
                       <path d="M16.53 13.2c-.25-.13-1.47-.73-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.66.81-.81.98-.15.17-.3.19-.56.07-.25-.13-1.06-.39-2.02-1.24-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43-.14 0-.3-.01-.47-.01s-.27.04-.41.2c-.15.17-.57.56-.57 1.36 0 .8.58 1.58.66 1.69.08.11 1.14 1.74 2.76 2.41 1.62.67 1.62.45 1.92.42.3-.03 1.17-.48 1.33-.97.17-.48.17-.9.12-.97-.05-.08-.22-.13-.47-.26z"/>
                     </svg>
@@ -106,9 +110,9 @@ export default function ActionCards() {
                 {/* Icono y texto principal */}
                 <div className="flex items-center gap-4 flex-1">
                   {/* Icono Directorio */}
-                  <div className="shrink-0 w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 border border-white/50">
-                    <svg className="w-9 h-9" fill="none" stroke="#FF6B35" viewBox="0 0 24 24" style={{ strokeWidth: 1, filter: 'drop-shadow(0 0 1px rgba(255, 107, 53, 0.4))' }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  <div className="shrink-0 w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                     </svg>
                   </div>
                   
