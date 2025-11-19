@@ -11,11 +11,12 @@ export default function LoadingScreen() {
     // Animación de progreso
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
+        const next = prev + 2;
+        if (next >= 100) {
           clearInterval(progressInterval);
           return 100;
         }
-        return prev + 2;
+        return next;
       });
     }, 40);
 
@@ -99,7 +100,7 @@ export default function LoadingScreen() {
       </div>
 
       {/* Contenido principal - Responsive */}
-      <div className="text-center relative z-10 animate-fade-in px-4 py-4 sm:py-8 md:py-12 lg:py-16 max-w-7xl mx-auto w-full min-h-screen flex flex-col items-center justify-center">
+      <div className="text-center relative z-10 animate-fade-in px-4 py-4 sm:py-8 md:py-12 lg:py-16 max-w-7xl mx-auto w-full flex flex-col items-center justify-center">
         {/* Logo con efecto de entrada */}
         <div className="mb-4 sm:mb-6 md:mb-8 w-full">
           <div className="flex justify-center mb-4 sm:mb-6">
@@ -118,15 +119,15 @@ export default function LoadingScreen() {
                     transform: 'scale(1.2)',
                   }}
                 ></div>
-              <Image
-                src="/images/logo/Logo_Dondel.png"
-                alt="DondeOficial Logo"
-                fill
+                <Image
+                  src="/images/logo/Logo_Dondel.png"
+                  alt="DondeOficial Logo"
+                  fill
                   className="object-contain drop-shadow-2xl relative z-10"
-                priority
+                  priority
                   sizes="(max-width: 480px) 128px, (max-width: 640px) 160px, (max-width: 768px) 192px, (max-width: 1024px) 256px, (max-width: 1280px) 320px, 384px"
                   unoptimized={true}
-              />
+                />
               </div>
             </div>
           </div>
@@ -187,93 +188,194 @@ export default function LoadingScreen() {
           </p>
         </div>
 
-        {/* Spinner mejorado con efectos 3D - Responsive */}
+        {/* Localizador animado - Diseño limpio */}
         <div className="flex justify-center mb-4 sm:mb-6">
-          <div className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20">
-            {/* Glow alrededor del spinner */}
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56">
+            {/* Glow suave alrededor */}
             <div 
-              className="absolute inset-0 rounded-full blur-md opacity-30"
+              className="absolute inset-0 rounded-full blur-2xl opacity-25"
               style={{
                 background: 'radial-gradient(circle, #FF5A00 0%, transparent 70%)',
                 animation: 'pulse 2s ease-in-out infinite',
               }}
             ></div>
-            {/* Anillo exterior con gradiente */}
-            <div 
-              className="absolute inset-0 rounded-full border-t-transparent animate-spin"
-              style={{ 
-                border: '2px solid',
-                borderColor: '#f1f1f1',
-                animationDuration: '1s',
-                filter: 'drop-shadow(0 0 8px rgba(255, 90, 0, 0.4))',
-              }}
-            ></div>
-            {/* Anillo medio con efecto de brillo */}
-            <div 
-              className="absolute inset-1 sm:inset-2 rounded-full border border-b-transparent animate-spin"
-              style={{ 
-                borderColor: '#FF5A00',
-                animationDuration: '1.5s',
-                animationDirection: 'reverse',
-                boxShadow: '0 0 10px rgba(255, 90, 0, 0.5)',
-              }}
-            ></div>
-            {/* Anillo interior */}
-            <div 
-              className="absolute inset-2 sm:inset-4 rounded-full border border-r-transparent animate-spin"
-              style={{ 
-                borderColor: '#f1f1f1',
-                animationDuration: '0.8s',
-                opacity: 0.7,
-              }}
-            ></div>
-            {/* Centro con punto brillante */}
-            <div 
-              className="absolute inset-3 sm:inset-6 rounded-full"
-              style={{
-                background: 'radial-gradient(circle, #FF5A00 0%, transparent 70%)',
-                animation: 'pulse 1.5s ease-in-out infinite',
-              }}
-            ></div>
+            
+            {/* SVG del localizador */}
+            <svg 
+              className="w-full h-full relative z-10"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="pinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ff7a33" />
+                  <stop offset="50%" stopColor="#FF5A00" />
+                  <stop offset="100%" stopColor="#cc4800" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              
+              {/* Círculo de carga - Spinner */}
+              <circle
+                cx="50"
+                cy="50"
+                r="35"
+                fill="none"
+                stroke="rgba(255, 90, 0, 0.2)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="35"
+                fill="none"
+                stroke="#FF5A00"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={Math.PI * 70}
+                strokeDashoffset={Math.PI * 70 * (1 - progress / 100)}
+                style={{
+                  transform: 'rotate(-90deg)',
+                  transformOrigin: '50px 50px',
+                  transition: 'stroke-dashoffset 0.1s linear',
+                  filter: 'drop-shadow(0 0 4px rgba(255, 90, 0, 0.5))',
+                }}
+              />
+              
+              {/* Ondas de radar suaves */}
+              <circle 
+                cx="50" 
+                cy="50" 
+                r="20" 
+                fill="none" 
+                stroke="#FF5A00" 
+                strokeWidth="1.5"
+                opacity="0.3"
+                style={{
+                  animation: 'radarWave 2.5s ease-out infinite',
+                }}
+              />
+              <circle 
+                cx="50" 
+                cy="50" 
+                r="20" 
+                fill="none" 
+                stroke="#FF5A00" 
+                strokeWidth="1.5"
+                opacity="0.3"
+                style={{
+                  animation: 'radarWave 2.5s ease-out infinite 0.6s',
+                }}
+              />
+              <circle 
+                cx="50" 
+                cy="50" 
+                r="20" 
+                fill="none" 
+                stroke="#FF5A00" 
+                strokeWidth="1.5"
+                opacity="0.3"
+                style={{
+                  animation: 'radarWave 2.5s ease-out infinite 1.2s',
+                }}
+              />
+              
+              {/* Puntos de negocios alrededor */}
+              <circle cx="30" cy="35" r="2" fill="#FF5A00" opacity="0.5">
+                <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" begin="0s" />
+                <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" begin="0s" />
+              </circle>
+              <circle cx="70" cy="40" r="2" fill="#FF5A00" opacity="0.5">
+                <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" begin="0.4s" />
+                <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" begin="0.4s" />
+              </circle>
+              <circle cx="35" cy="70" r="2" fill="#FF5A00" opacity="0.5">
+                <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" begin="0.8s" />
+                <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" begin="0.8s" />
+              </circle>
+              <circle cx="75" cy="65" r="2" fill="#FF5A00" opacity="0.5">
+                <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" begin="1.2s" />
+                <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" begin="1.2s" />
+              </circle>
+              
+              {/* Pin de localización - Centro */}
+              <g transform="translate(50, 50)">
+                {/* Sombra del pin */}
+                <ellipse 
+                  cx="0" 
+                  cy="10" 
+                  rx="5" 
+                  ry="2.5" 
+                  fill="#000" 
+                  opacity="0.3"
+                  style={{
+                    animation: 'pinShadowPulse 2s ease-in-out infinite',
+                  }}
+                />
+                
+                {/* Cuerpo del pin */}
+                <path 
+                  d="M 0,-10 L -4.5,2 L 0,3.5 L 4.5,2 Z" 
+                  fill="url(#pinGradient)"
+                  stroke="#f1f1f1"
+                  strokeWidth="0.6"
+                  filter="url(#glow)"
+                  style={{
+                    animation: 'pinBounce 2s ease-in-out infinite',
+                  }}
+                />
+                
+                {/* Centro del pin con brillo */}
+                <circle 
+                  cx="0" 
+                  cy="-4" 
+                  r="2.5" 
+                  fill="#f1f1f1"
+                  style={{
+                    animation: 'pinPulse 2s ease-in-out infinite',
+                    filter: 'drop-shadow(0 0 3px rgba(255, 90, 0, 0.8))',
+                  }}
+                />
+                <circle 
+                  cx="0" 
+                  cy="-4" 
+                  r="1.2" 
+                  fill="#FF5A00"
+                  style={{
+                    animation: 'pinPulse 2s ease-in-out infinite',
+                  }}
+                />
+              </g>
+            </svg>
           </div>
         </div>
 
-        {/* Texto de carga con efecto mejorado - Responsive */}
+        {/* Texto de carga con efecto cubo 3D */}
         <div className="flex items-center justify-center gap-2 animate-fade-in-delay">
-          <p 
-            className="text-xs sm:text-sm font-light tracking-wide"
-            style={{ 
-              color: '#f1f1f1',
-              opacity: 0.8,
-            }}
-          >
-            Cargando
-          </p>
-          <div className="flex gap-1">
-            <div 
-              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
-              style={{
-                backgroundColor: '#FF5A00',
-                animation: 'bounce 1.4s ease-in-out infinite',
-                animationDelay: '0s',
-              }}
-            ></div>
-            <div 
-              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
-              style={{
-                backgroundColor: '#FF5A00',
-                animation: 'bounce 1.4s ease-in-out infinite',
-                animationDelay: '0.2s',
-              }}
-            ></div>
-            <div 
-              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
-              style={{
-                backgroundColor: '#FF5A00',
-                animation: 'bounce 1.4s ease-in-out infinite',
-                animationDelay: '0.4s',
-              }}
-            ></div>
+          <div className="flex gap-0.5 sm:gap-1" style={{ perspective: '1000px' }}>
+            {'Cargando'.split('').map((char, index) => (
+              <span
+                key={index}
+                className="inline-block text-xs sm:text-sm font-semibold"
+                style={{
+                  color: '#f1f1f1',
+                  transformStyle: 'preserve-3d',
+                  animation: `cubeRotate 2s ease-in-out infinite`,
+                  animationDelay: `${index * 0.1}s`,
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                }}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -389,6 +491,69 @@ export default function LoadingScreen() {
           50% {
             opacity: 0.6;
             transform: scale(1.1);
+          }
+        }
+
+        @keyframes cubeRotate {
+          0%, 100% {
+            transform: rotateX(0deg) rotateY(0deg);
+            opacity: 0.8;
+          }
+          25% {
+            transform: rotateX(15deg) rotateY(-10deg);
+            opacity: 1;
+          }
+          50% {
+            transform: rotateX(0deg) rotateY(0deg);
+            opacity: 0.8;
+          }
+          75% {
+            transform: rotateX(-15deg) rotateY(10deg);
+            opacity: 1;
+          }
+        }
+
+        @keyframes radarWave {
+          0% {
+            r: 18;
+            opacity: 0.5;
+            stroke-width: 1.5;
+          }
+          100% {
+            r: 45;
+            opacity: 0;
+            stroke-width: 0.5;
+          }
+        }
+
+        @keyframes pinBounce {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+          }
+          50% {
+            transform: translateY(-4px) scale(1.05);
+          }
+        }
+
+        @keyframes pinPulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.8;
+            transform: scale(1.15);
+          }
+        }
+
+        @keyframes pinShadowPulse {
+          0%, 100% {
+            opacity: 0.4;
+            transform: scaleX(1);
+          }
+          50% {
+            opacity: 0.6;
+            transform: scaleX(1.2);
           }
         }
 
