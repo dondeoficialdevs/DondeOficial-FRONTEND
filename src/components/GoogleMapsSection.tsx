@@ -480,7 +480,6 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                 </div>
               )}
             </div>
-          </div>
           )}
 
           {!isNaN(mapCenter[0]) && !isNaN(mapCenter[1]) && (
