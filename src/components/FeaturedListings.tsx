@@ -3,6 +3,7 @@
 import { Business } from '../types';
 import Link from 'next/link';
 import { useFavorites } from '@/hooks/useFavorites';
+import ImageSlider from './ImageSlider';
 
 interface FeaturedListingsProps {
   businesses: Business[];
@@ -44,13 +45,27 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {businesses.slice(0, 6).map((business) => (
               <div key={business.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group">
-                {/* Image Section */}
-                <div className="h-56 bg-linear-to-br from-blue-100 to-blue-200 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
+                {/* Image Section con Slider (máximo 3 imágenes) */}
+                <div className="h-56 relative overflow-hidden">
+                  {business.images && business.images.length > 0 ? (
+                    <>
+                      <ImageSlider
+                        images={business.images}
+                        alt={business.name}
+                        maxImages={3}
+                        className="w-full h-full"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent pointer-events-none"></div>
+                    </>
+                  ) : (
+                    <div className="h-full bg-linear-to-br from-blue-100 to-blue-200 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
+                    </div>
+                  )}
                   
                   {/* Category Badge */}
                   {business.category_name && (
-                    <div className="absolute top-4 left-4">
+                    <div className="absolute top-4 left-4 z-10">
                       <span className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg">
                         {business.category_name}
                       </span>
@@ -58,7 +73,7 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
                   )}
                   
                   {/* Status Badge */}
-                  <div className="absolute top-4 right-4">
+                  <div className="absolute top-4 right-4 z-10">
                     <span className={`px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg ${
                       business.opening_hours?.toLowerCase().includes('close') 
                         ? 'bg-red-500 text-white' 
@@ -69,7 +84,7 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
                   </div>
 
                   {/* Featured Badge */}
-                  <div className="absolute bottom-4 left-4">
+                  <div className="absolute bottom-4 left-4 z-10">
                     <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
                       Destacado
                     </span>

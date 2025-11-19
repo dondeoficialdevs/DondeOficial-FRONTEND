@@ -3,9 +3,39 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
+interface Particle {
+  size: number;
+  left: number;
+  top: number;
+  opacity: number;
+  animationDuration: number;
+  animationDelay: number;
+  backgroundColor: string;
+}
+
 export default function LoadingScreen() {
   const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // Generar partículas solo en el cliente para evitar problemas de hidratación
+    setIsMounted(true);
+    const generatedParticles: Particle[] = [...Array(12)].map((_, i) => {
+      const baseSize = 3;
+      return {
+        size: baseSize + Math.random() * 2,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        opacity: Math.random() * 0.5 + 0.2,
+        animationDuration: 3 + Math.random() * 2,
+        animationDelay: Math.random() * 2,
+        backgroundColor: i % 3 === 0 ? '#FF5A00' : '#f1f1f1',
+      };
+    });
+    setParticles(generatedParticles);
+  }, []);
 
   useEffect(() => {
     // Animación de progreso
@@ -75,29 +105,26 @@ export default function LoadingScreen() {
       </div>
 
       {/* Partículas flotantes animadas - Responsive */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(12)].map((_, i) => {
-          // Hacer las partículas más pequeñas en móviles
-          const baseSize = 3;
-          const size = baseSize + Math.random() * 2;
-          return (
+      {isMounted && (
+        <div className="absolute inset-0 overflow-hidden">
+          {particles.map((particle, i) => (
             <div
               key={i}
               className="absolute rounded-full"
               style={{
-                width: `${size}px`,
-                height: `${size}px`,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                backgroundColor: i % 3 === 0 ? '#FF5A00' : '#f1f1f1',
-                opacity: Math.random() * 0.5 + 0.2,
-                animation: `float ${3 + Math.random() * 2}s ease-in-out infinite`,
-                animationDelay: `${Math.random() * 2}s`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
+                backgroundColor: particle.backgroundColor,
+                opacity: particle.opacity,
+                animation: `float ${particle.animationDuration}s ease-in-out infinite`,
+                animationDelay: `${particle.animationDelay}s`,
               }}
             ></div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Contenido principal - Responsive */}
       <div className="text-center relative z-10 animate-fade-in px-4 py-4 sm:py-8 md:py-12 lg:py-16 max-w-7xl mx-auto w-full flex flex-col items-center justify-center">

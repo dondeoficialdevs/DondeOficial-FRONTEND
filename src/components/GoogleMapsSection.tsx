@@ -68,19 +68,47 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const [showHint, setShowHint] = useState(true);
 
-  // Filtrar negocios que tienen coordenadas
+  // Filtrar negocios que tienen coordenadas válidas
   const businessesWithCoords = useMemo(() => {
     return businesses.filter(
-      (business) => business.latitude && business.longitude
+      (business) => 
+        business.latitude != null && 
+        business.longitude != null && 
+        !isNaN(Number(business.latitude)) && 
+        !isNaN(Number(business.longitude)) &&
+        Number(business.latitude) !== 0 &&
+        Number(business.longitude) !== 0
     );
   }, [businesses]);
 
+  // Función para calcular el centro de manera segura
+  const calculateCenter = (businessesList: Business[]): [number, number] => {
+    if (businessesList.length === 0) return defaultCenter;
+    
+    const validBusinesses = businessesList.filter(
+      (b) => 
+        b.latitude != null && 
+        b.longitude != null && 
+        !isNaN(Number(b.latitude)) && 
+        !isNaN(Number(b.longitude)) &&
+        Number(b.latitude) !== 0 &&
+        Number(b.longitude) !== 0
+    );
+
+    if (validBusinesses.length === 0) return defaultCenter;
+
+    const avgLat = validBusinesses.reduce((sum, b) => sum + Number(b.latitude!), 0) / validBusinesses.length;
+    const avgLng = validBusinesses.reduce((sum, b) => sum + Number(b.longitude!), 0) / validBusinesses.length;
+
+    // Validar que los resultados sean números válidos
+    if (isNaN(avgLat) || isNaN(avgLng)) return defaultCenter;
+
+    return [avgLat, avgLng];
+  };
+
   // Calcular centro inicial
   const [mapCenter, setMapCenter] = useState<[number, number]>(() => {
-    if (businessesWithCoords.length === 0) return defaultCenter;
-    const avgLat = businessesWithCoords.reduce((sum, b) => sum + (b.latitude || 0), 0) / businessesWithCoords.length;
-    const avgLng = businessesWithCoords.reduce((sum, b) => sum + (b.longitude || 0), 0) / businessesWithCoords.length;
-    return [avgLat, avgLng];
+    return calculateCenter(businessesWithCoords);
   });
 
   // Cargar categorías
@@ -127,11 +155,8 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
           console.log('Error obteniendo ubicación:', error);
           setLocationError('No se pudo obtener tu ubicación');
           // Si falla, usar centro basado en negocios o default
-          if (businessesWithCoords.length > 0) {
-            const avgLat = businessesWithCoords.reduce((sum, b) => sum + (b.latitude || 0), 0) / businessesWithCoords.length;
-            const avgLng = businessesWithCoords.reduce((sum, b) => sum + (b.longitude || 0), 0) / businessesWithCoords.length;
-            setMapCenter([avgLat, avgLng]);
-          }
+          const newCenter = calculateCenter(businessesWithCoords);
+          setMapCenter(newCenter);
         },
         {
           enableHighAccuracy: true,
@@ -167,9 +192,8 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
   // Actualizar centro cuando cambien los negocios filtrados o la búsqueda
   useEffect(() => {
     if (filteredBusinesses.length > 0 && (searchTerm || selectedCategory)) {
-      const avgLat = filteredBusinesses.reduce((sum, b) => sum + (b.latitude || 0), 0) / filteredBusinesses.length;
-      const avgLng = filteredBusinesses.reduce((sum, b) => sum + (b.longitude || 0), 0) / filteredBusinesses.length;
-      setMapCenter([avgLat, avgLng]);
+      const newCenter = calculateCenter(filteredBusinesses);
+      setMapCenter(newCenter);
       // Ajustar zoom según la cantidad de resultados
       if (filteredBusinesses.length === 1) {
         setMapZoom(15);
@@ -183,8 +207,13 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
 
   const handleMarkerClick = (business: Business) => {
     setSelectedBusiness(business);
-    if (business.latitude && business.longitude) {
-      setMapCenter([business.latitude, business.longitude]);
+    if (
+      business.latitude != null && 
+      business.longitude != null && 
+      !isNaN(Number(business.latitude)) && 
+      !isNaN(Number(business.longitude))
+    ) {
+      setMapCenter([Number(business.latitude), Number(business.longitude)]);
       setMapZoom(15);
     }
   };
@@ -447,12 +476,13 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
           </div>
           )}
 
-          <MapContainer
-            center={mapCenter}
-            zoom={mapZoom}
-            style={{ height: '100%', width: '100%' }}
-            className="z-0"
-          >
+          {!isNaN(mapCenter[0]) && !isNaN(mapCenter[1]) && (
+            <MapContainer
+              center={mapCenter}
+              zoom={mapZoom}
+              style={{ height: '100%', width: '100%' }}
+              className="z-0"
+            >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -484,10 +514,17 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
             )}
             
             {/* Marcadores de negocios */}
-            {filteredBusinesses.map((business) => (
+            {filteredBusinesses
+              .filter((b) => 
+                b.latitude != null && 
+                b.longitude != null && 
+                !isNaN(Number(b.latitude)) && 
+                !isNaN(Number(b.longitude))
+              )
+              .map((business) => (
               <Marker
                 key={business.id}
-                position={[business.latitude!, business.longitude!]}
+                position={[Number(business.latitude!), Number(business.longitude!)]}
                 eventHandlers={{
                   click: () => handleMarkerClick(business),
                 }}
@@ -550,6 +587,7 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
               </Marker>
             ))}
           </MapContainer>
+          )}
         </div>
 
         {/* Información adicional */}

@@ -7,6 +7,7 @@ import { Business, Category } from '../../types';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import BusinessDetailModal from '../../components/BusinessDetailModal';
+import ImageSlider from '../../components/ImageSlider';
 
 export default function ListingsContent() {
   const searchParams = useSearchParams();
@@ -505,28 +506,30 @@ export default function ListingsContent() {
 
                   return (
                     <div key={business.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                      {/* Image */}
-                      <div className="relative h-48 overflow-hidden">
-                        {primaryImage ? (
-                          <img
-                            src={primaryImage.image_url}
-                            alt={business.name}
-                            className="w-full h-full object-cover"
-                          />
+                      {/* Slider de imágenes (máximo 3) */}
+                      <div className="relative h-48">
+                        {business.images && business.images.length > 0 ? (
+                          <>
+                            <ImageSlider
+                              images={business.images}
+                              alt={business.name}
+                              maxImages={3}
+                              className="w-full h-full"
+                            />
+                            {/* Banner */}
+                            {showBanner && (
+                              <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-bold text-white z-20 ${
+                                bannerText === 'TENDENCIAS DE NOVIEMBRE' ? 'bg-orange-500' : 'bg-blue-600'
+                              }`}>
+                                {bannerText}
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center">
                             <svg className="w-12 h-12 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                          </div>
-                        )}
-                        
-                        {/* Banner */}
-                        {showBanner && (
-                          <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-bold text-white ${
-                            bannerText === 'TENDENCIAS DE NOVIEMBRE' ? 'bg-orange-500' : 'bg-blue-600'
-                          }`}>
-                            {bannerText}
                           </div>
                         )}
                       </div>
