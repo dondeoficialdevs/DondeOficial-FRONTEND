@@ -49,7 +49,7 @@ export default function Footer() {
                   unoptimized={true}
                 />
               </div>
-              <span className="text-xl sm:text-2xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent">
                 DondeOficial
               </span>
             </div>

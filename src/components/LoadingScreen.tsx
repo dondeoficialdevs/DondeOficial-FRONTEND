@@ -137,24 +137,26 @@ export default function LoadingScreen() {
                 animation: 'scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
             >
-              <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-64 lg:h-64 xl:w-80 xl:h-80 2xl:w-96 2xl:h-96">
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 xl:w-40 xl:h-40 2xl:w-44 2xl:h-44">
                 {/* Glow effect alrededor del logo */}
                 <div 
                   className="absolute inset-0 rounded-full blur-2xl sm:blur-3xl opacity-30 animate-pulse"
                   style={{
                     background: 'radial-gradient(circle, #FF5A00 0%, transparent 70%)',
-                    transform: 'scale(1.2)',
+                    transform: 'scale(1.15)',
                   }}
                 ></div>
-                <Image
-                  src="/images/logo/Logo_Dondel.png"
-                  alt="DondeOficial Logo"
-                  fill
-                  className="object-contain drop-shadow-2xl relative z-10"
-                  priority
-                  sizes="(max-width: 480px) 128px, (max-width: 640px) 160px, (max-width: 768px) 192px, (max-width: 1024px) 256px, (max-width: 1280px) 320px, 384px"
-                  unoptimized={true}
-                />
+                <div className="relative w-full h-full flex items-center justify-center z-10">
+                  <Image
+                    src="/images/logo/Logo_Dondel.png"
+                    alt="DondeOficial Logo"
+                    fill
+                    className="object-contain drop-shadow-2xl"
+                    priority
+                    sizes="(max-width: 480px) 96px, (max-width: 640px) 112px, (max-width: 768px) 128px, (max-width: 1024px) 144px, (max-width: 1280px) 160px, 176px"
+                    unoptimized={true}
+                  />
+                </div>
               </div>
             </div>
           </div>
