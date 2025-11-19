@@ -363,15 +363,9 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                         <Link href="/add-listing" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-semibold" onClick={() => setShowMenuDropdown(false)}>
                           ANUNCIA TU NEGOCIO
                         </Link>
-                        <Link href="#" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
-                          CuponaticGrow
-                        </Link>
                         <div className="border-t border-teal-500 my-1"></div>
                         <Link href="#" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
                           HAZ CRECER TU NEGOCIO
-                        </Link>
-                        <Link href="#" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
-                          VENDE EN CUPONATIC
                         </Link>
                         <Link href="/admin/login" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
                           INICIAR SESIÓN
