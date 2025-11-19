@@ -8,13 +8,8 @@ import LoadingScreen from '../components/LoadingScreen';
 import Header from '../components/Header';
 import ActionCards from '../components/ActionCards';
 import FeaturedListings from '../components/FeaturedListings';
-import FeaturesSection from '../components/FeaturesSection';
 import CategorySection from '../components/CategorySection';
-import AppDownload from '../components/AppDownload';
 import StatsSection from '../components/StatsSection';
-import VideoSection from '../components/VideoSection';
-import NewsletterSection from '../components/NewsletterSection';
-import BlogSection from '../components/BlogSection';
 import Footer from '../components/Footer';
 import BusinessDetailModal from '../components/BusinessDetailModal';
 
@@ -117,6 +112,11 @@ export default function Home() {
         <main>
           <ActionCards />
           
+          <CategorySection
+            categories={categories}
+            onCategorySelect={(categoryName) => handleSearch('', categoryName)}
+          />
+          
           <GoogleMapsSection businesses={businesses} onSearch={handleSearch} />
           
           {error && (
@@ -141,22 +141,7 @@ export default function Home() {
             }}
           />
           
-          <FeaturesSection />
-          
-          <CategorySection
-            categories={categories}
-            onCategorySelect={(categoryName) => handleSearch('', categoryName)}
-          />
-          
-          <AppDownload />
-          
           <StatsSection />
-          
-          <VideoSection />
-          
-          <NewsletterSection />
-          
-          <BlogSection />
         </main>
 
         <Footer />

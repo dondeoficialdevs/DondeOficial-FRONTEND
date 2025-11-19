@@ -4,8 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Business } from '../types';
-import SearchBar from './SearchBar';
+import { Business, Category } from '../types';
+import { categoryApi } from '../lib/api';
+import Link from 'next/link';
 
 interface GoogleMapsSectionProps {
   businesses: Business[];
@@ -59,6 +60,13 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
   const [mapZoom, setMapZoom] = useState(12);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [location, setLocation] = useState('Cerca de mí');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
+  const [showHint, setShowHint] = useState(true);
 
   // Filtrar negocios que tienen coordenadas
   const businessesWithCoords = useMemo(() => {
@@ -74,6 +82,35 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
     const avgLng = businessesWithCoords.reduce((sum, b) => sum + (b.longitude || 0), 0) / businessesWithCoords.length;
     return [avgLat, avgLng];
   });
+
+  // Cargar categorías
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await categoryApi.getAll();
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  // Cerrar dropdowns al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.category-dropdown') && !target.closest('.menu-dropdown')) {
+        setShowCategoryDropdown(false);
+        setShowMenuDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Detectar ubicación del usuario automáticamente
   useEffect(() => {
@@ -107,27 +144,59 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
     }
   }, []);
 
-  // Actualizar centro cuando cambien los negocios (solo si no hay ubicación del usuario)
+  // Filtrar negocios según la búsqueda - usar los negocios que vienen del prop (ya filtrados por la API)
+  const filteredBusinesses = useMemo(() => {
+    // Si hay búsqueda activa, usar los negocios del prop (ya filtrados por la API)
+    // Si no hay búsqueda, mostrar todos los negocios con coordenadas
+    const businessesToFilter = (searchTerm || selectedCategory) ? businesses : businessesWithCoords;
+    
+    // Filtrar solo los que tienen coordenadas para mostrar en el mapa
+    return businessesToFilter.filter((business) => {
+      if (!business.latitude || !business.longitude) return false;
+      
+      // Si hay búsqueda activa, los negocios ya vienen filtrados del prop
+      if (searchTerm || selectedCategory) {
+        return true;
+      }
+      
+      // Si no hay búsqueda, mostrar todos
+      return true;
+    });
+  }, [businesses, businessesWithCoords, searchTerm, selectedCategory]);
+
+  // Actualizar centro cuando cambien los negocios filtrados o la búsqueda
   useEffect(() => {
-    if (!userLocation && businessesWithCoords.length > 0) {
-      const avgLat = businessesWithCoords.reduce((sum, b) => sum + (b.latitude || 0), 0) / businessesWithCoords.length;
-      const avgLng = businessesWithCoords.reduce((sum, b) => sum + (b.longitude || 0), 0) / businessesWithCoords.length;
+    if (filteredBusinesses.length > 0 && (searchTerm || selectedCategory)) {
+      const avgLat = filteredBusinesses.reduce((sum, b) => sum + (b.latitude || 0), 0) / filteredBusinesses.length;
+      const avgLng = filteredBusinesses.reduce((sum, b) => sum + (b.longitude || 0), 0) / filteredBusinesses.length;
       setMapCenter([avgLat, avgLng]);
+      // Ajustar zoom según la cantidad de resultados
+      if (filteredBusinesses.length === 1) {
+        setMapZoom(15);
+      } else if (filteredBusinesses.length < 5) {
+        setMapZoom(13);
+      } else {
+        setMapZoom(12);
+      }
     }
-  }, [businessesWithCoords.length, userLocation]);
+  }, [filteredBusinesses, searchTerm, selectedCategory]);
 
   const handleMarkerClick = (business: Business) => {
     setSelectedBusiness(business);
-    setShowSearchBar(false);
     if (business.latitude && business.longitude) {
       setMapCenter([business.latitude, business.longitude]);
       setMapZoom(15);
     }
   };
 
-  const handleSearch = (search: string, category?: string, location?: string) => {
-    onSearch(search, category, location);
-    setShowSearchBar(false);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const locationToUse = location === 'Cerca de mí' ? '' : location;
+    onSearch(searchTerm, selectedCategory || undefined, locationToUse);
+  };
+
+  const handleClearLocation = () => {
+    setLocation('Cerca de mí');
   };
 
   // Función para obtener direcciones/rutas
@@ -169,90 +238,200 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
   return (
     <section className="relative bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Título */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Explora Negocios en el Mapa
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Haz clic en el mapa para buscar negocios o explora los marcadores para ver más detalles
-          </p>
-        </div>
+        {/* Mensaje informativo */}
+        {!showSearchBar && showHint && (
+          <div className="mb-4 bg-gray-100 border border-gray-300 p-3 rounded-lg">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-700 font-medium">
+                Haz clic en el mapa para abrir el buscador
+              </p>
+              <button
+                onClick={() => setShowHint(false)}
+                className="flex-shrink-0 text-gray-500 hover:text-gray-700 transition-colors ml-4"
+                aria-label="Cerrar mensaje"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
 
-        {/* SearchBar que aparece al hacer click */}
-        {showSearchBar && (
-          <div className="mb-6 search-bar-container">
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 search-bar-content">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        {/* Mapa */}
+        <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200 map-container" style={{ height: '600px' }}>
+          {/* Buscador overlay que aparece encima del mapa */}
+          {showSearchBar && (
+            <div className="absolute top-4 left-4 right-4 z-[1000] search-bar-container">
+              <div className="bg-blue-900 rounded-lg p-4 shadow-2xl">
+                <div className="flex items-center gap-2">
+                {/* Botón Categorías */}
+                <div className="relative category-dropdown">
+                  <button
+                    onClick={() => {
+                      setShowCategoryDropdown(!showCategoryDropdown);
+                      setShowMenuDropdown(false);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm"
+                  >
+                    <span className="font-semibold">Categorías</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Buscar Negocios</h3>
-                    <p className="text-sm text-gray-500">Encuentra lo que necesitas cerca de ti</p>
-                  </div>
+                  </button>
+                  
+                  {showCategoryDropdown && (
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                      {categories.length > 0 ? (
+                        categories.map((category) => (
+                          <button
+                            key={category.id}
+                            onClick={() => {
+                              setSelectedCategory(category.name);
+                              setShowCategoryDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors text-sm font-medium text-gray-900"
+                          >
+                            {category.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-gray-500">Cargando categorías...</div>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {/* Campo de búsqueda */}
+                <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="¿Qué estas buscando?"
+                    className="flex-1 px-4 py-2.5 bg-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                  />
+
+                  {/* Filtro de ubicación */}
+                  {location && (
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-sm text-gray-900 font-semibold">{location}</span>
+                      <button
+                        type="button"
+                        onClick={handleClearLocation}
+                        className="text-gray-600 hover:text-gray-900"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Botón de búsqueda */}
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </form>
+
+                {/* Botón con menú desplegable */}
+                <div className="relative menu-dropdown">
+                  <button
+                    onClick={() => {
+                      setShowMenuDropdown(!showMenuDropdown);
+                      setShowCategoryDropdown(false);
+                    }}
+                    className="px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-sm"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                  
+                  {showMenuDropdown && (
+                    <div className="absolute top-full right-0 mt-2 w-64 bg-teal-600 rounded-lg shadow-xl z-50">
+                      <div className="py-2">
+                        <Link href="/add-listing" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-semibold" onClick={() => setShowMenuDropdown(false)}>
+                          ANUNCIA TU NEGOCIO
+                        </Link>
+                        <Link href="#" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
+                          CuponaticGrow
+                        </Link>
+                        <div className="border-t border-teal-500 my-1"></div>
+                        <Link href="#" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
+                          HAZ CRECER TU NEGOCIO
+                        </Link>
+                        <Link href="#" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
+                          VENDE EN CUPONATIC
+                        </Link>
+                        <Link href="/admin/login" className="block px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium" onClick={() => setShowMenuDropdown(false)}>
+                          INICIAR SESIÓN
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Botón para cerrar el buscador */}
                 <button
-                  onClick={() => setShowSearchBar(false)}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all duration-300 group"
-                  aria-label="Cerrar búsqueda"
+                  onClick={() => {
+                    setShowSearchBar(false);
+                    setSearchTerm('');
+                    setSelectedCategory('');
+                    setLocation('Cerca de mí');
+                  }}
+                  className="px-3 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  title="Cerrar buscador"
                 >
-                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              <SearchBar onSearch={handleSearch} />
-            </div>
-            
-            {/* Lista de negocios registrados */}
-            {businessesWithCoords.length > 0 && (
-              <div className="mt-6 business-list-container">
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900">
-                      Negocios en el Mapa ({businessesWithCoords.length})
-                    </h4>
+
+              {/* Lista de negocios encontrados */}
+              {(searchTerm || selectedCategory) && filteredBusinesses.length > 0 && (
+                <div className="mt-4 bg-white rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                  <div className="p-3 border-b border-gray-200">
+                    <h3 className="text-sm font-bold text-gray-900">
+                      {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'negocio encontrado' : 'negocios encontrados'}
+                    </h3>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
-                    {businessesWithCoords.map((business) => (
+                  <div className="divide-y divide-gray-200">
+                    {filteredBusinesses.map((business) => (
                       <div
                         key={business.id}
-                        onClick={() => handleMarkerClick(business)}
-                        className="group bg-gray-50 rounded-xl p-4 border-2 border-transparent hover:border-blue-300 hover:bg-white cursor-pointer transition-all duration-300 hover:shadow-lg"
+                        onClick={() => {
+                          handleMarkerClick(business);
+                          setShowSearchBar(false);
+                        }}
+                        className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
                       >
                         <div className="flex items-start gap-3">
-                          {/* Icono de ubicación */}
-                          <div className="shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </div>
-                          
-                          {/* Información del negocio */}
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
-                              {business.name}
-                            </h5>
+                            <h4 className="font-semibold text-gray-900 mb-1 line-clamp-1">{business.name}</h4>
                             {business.category_name && (
-                              <span className="inline-block text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-2">
+                              <span className="inline-block text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-1">
                                 {business.category_name}
                               </span>
                             )}
                             {business.address && (
-                              <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                                📍 {business.address}
-                              </p>
-                            )}
-                            {business.phone && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                📞 {business.phone}
-                              </p>
+                              <p className="text-xs text-gray-600 line-clamp-1 mt-1">{business.address}</p>
                             )}
                           </div>
                         </div>
@@ -260,13 +439,20 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
 
-        {/* Mapa */}
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200 map-container">
+              {/* Mensaje cuando no hay resultados */}
+              {(searchTerm || selectedCategory) && filteredBusinesses.length === 0 && (
+                <div className="mt-4 bg-white rounded-lg shadow-lg p-4">
+                  <p className="text-sm text-gray-600 text-center">
+                    No se encontraron negocios con los criterios de búsqueda
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          )}
+
           <MapContainer
             center={mapCenter}
             zoom={mapZoom}
@@ -281,6 +467,7 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
             <MapClickHandler onMapClick={() => {
               setShowSearchBar(true);
               setSelectedBusiness(null);
+              setShowHint(false);
             }} />
             
             {/* Marcador de ubicación del usuario */}
@@ -303,7 +490,7 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
             )}
             
             {/* Marcadores de negocios */}
-            {businessesWithCoords.map((business) => (
+            {filteredBusinesses.map((business) => (
               <Marker
                 key={business.id}
                 position={[business.latitude!, business.longitude!]}

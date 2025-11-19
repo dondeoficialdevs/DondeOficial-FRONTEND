@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { businessApi, categoryApi } from '../../lib/api';
 import { Business, Category } from '../../types';
 import Header from '../../components/Header';
@@ -8,6 +9,7 @@ import Footer from '../../components/Footer';
 import BusinessDetailModal from '../../components/BusinessDetailModal';
 
 export default function ListingsPage() {
+  const searchParams = useSearchParams();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,19 +26,36 @@ export default function ListingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    loadInitialData();
-  }, []);
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      const decodedCategory = decodeURIComponent(categoryParam);
+      setSelectedCategory(decodedCategory);
+      loadInitialData(decodedCategory);
+    } else {
+      loadInitialData();
+    }
+  }, [searchParams]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = async (initialCategory?: string) => {
     try {
       setError(null);
+      const categoryToUse = initialCategory || selectedCategory;
+      
       const [businessesData, categoriesData] = await Promise.all([
-        businessApi.getAll({ limit: 50 }).catch(() => []),
+        businessApi.getAll({ 
+          limit: 50,
+          category: categoryToUse || undefined
+        }).catch(() => []),
         categoryApi.getAll().catch(() => [])
       ]);
       
       setBusinesses(businessesData);
       setCategories(categoriesData);
+      
+      // Si hay una categoría inicial, actualizar el estado
+      if (initialCategory) {
+        setSelectedCategory(initialCategory);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       setError('Error al cargar los datos');
