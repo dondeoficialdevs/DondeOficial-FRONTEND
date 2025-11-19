@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Business } from '../types';
 import { businessApi } from '../lib/api';
 import { useFavorites } from '@/hooks/useFavorites';
+import ReviewsSection from './ReviewsSection';
 
 interface BusinessDetailModalProps {
   businessId: number | null;
@@ -517,6 +518,11 @@ export default function BusinessDetailModal({ businessId, isOpen, onClose }: Bus
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Reviews Section */}
+              <div className="px-6 pb-6">
+                <ReviewsSection businessId={business.id} />
               </div>
             </div>
           ) : (

@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { Business, BusinessImage, Category, ApiResponse, BusinessFilters, Lead, NewsletterSubscriber, LoginResponse, User } from '@/types';
+import { Business, BusinessImage, Category, ApiResponse, BusinessFilters, Lead, NewsletterSubscriber, LoginResponse, User, Review, ReviewRating } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -361,6 +361,37 @@ export const leadsApi = {
   getById: async (id: number): Promise<Lead> => {
     const response = await api.get<ApiResponse<Lead>>(`/leads/${id}`);
     return response.data.data;
+  },
+};
+
+export const reviewApi = {
+  // Obtener todas las reseñas de un negocio
+  getByBusinessId: async (businessId: number): Promise<Review[]> => {
+    const response = await api.get<ApiResponse<Review[]>>(`/reviews/business/${businessId}`);
+    return response.data.data || [];
+  },
+
+  // Obtener promedio de calificaciones de un negocio
+  getRating: async (businessId: number): Promise<ReviewRating> => {
+    const response = await api.get<ApiResponse<ReviewRating>>(`/reviews/business/${businessId}/rating`);
+    return response.data.data;
+  },
+
+  // Crear nueva reseña
+  create: async (reviewData: {
+    business_id: number;
+    rating: number;
+    comment?: string;
+    user_name?: string;
+    user_email?: string;
+  }): Promise<Review> => {
+    const response = await api.post<ApiResponse<Review>>('/reviews', reviewData);
+    return response.data.data;
+  },
+
+  // Eliminar reseña
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/reviews/${id}`);
   },
 };
 

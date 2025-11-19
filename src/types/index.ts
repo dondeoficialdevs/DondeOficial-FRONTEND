@@ -81,3 +81,19 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
+
+export interface Review {
+  id: number;
+  business_id: number;
+  rating: number;
+  comment?: string;
+  user_name?: string;
+  user_email?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ReviewRating {
+  averageRating: number;
+  totalReviews: number;
+}
