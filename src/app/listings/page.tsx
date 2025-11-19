@@ -134,6 +134,34 @@ export default function ListingsPage() {
     'Bienestar y salud', 'Servicios', 'Productos', 'Cerca de mí'
   ];
 
+  // Mapeo de categorías del frontend a nombres del backend
+  // Busca la categoría en la lista de categorías del backend por nombre
+  const getCategoryBackendName = (frontendName: string): string => {
+    // Primero intenta encontrar la categoría en la lista del backend
+    const foundCategory = categories.find(cat => 
+      cat.name.toLowerCase() === frontendName.toLowerCase() ||
+      cat.name.toLowerCase().includes(frontendName.toLowerCase()) ||
+      frontendName.toLowerCase().includes(cat.name.toLowerCase())
+    );
+    
+    if (foundCategory) {
+      return foundCategory.name;
+    }
+    
+    // Si no se encuentra, usa un mapeo de respaldo
+    const categoryMap: { [key: string]: string } = {
+      'Belleza': 'Belleza',
+      'Entretenimiento': 'Entretenimiento',
+      'Gastronomía': 'Gastronomía',
+      'Viajes y turismo': 'Viajes y turismo',
+      'Bienestar y salud': 'Bienestar y salud',
+      'Servicios': 'Servicios',
+      'Productos': 'Productos',
+      'Cerca de mí': ''
+    };
+    return categoryMap[frontendName] || frontendName;
+  };
+
   const togglePriceFilter = (value: string) => {
     if (value === 'all') {
       setPriceFilters(['all']);
@@ -171,30 +199,41 @@ export default function ListingsPage() {
         <div className="bg-white border-b border-gray-200 pb-4 mb-4">
           <div className="flex items-center justify-between overflow-x-auto pb-2">
             <div className="flex space-x-4 min-w-max">
-              {mainCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    if (cat === 'Viajes y turismo') {
-                      handleCategoryFilter('tourism');
-                    }
-                  }}
-                  className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-all ${
-                    selectedCategory === 'tourism' && cat === 'Viajes y turismo'
-                      ? 'bg-blue-600 text-white'
-                      : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    selectedCategory === 'tourism' && cat === 'Viajes y turismo'
-                      ? 'bg-white/20'
-                      : 'bg-gray-100'
-                  }`}>
-                    {getCategoryIcon(cat)}
-                  </div>
-                  <span className="text-xs font-medium whitespace-nowrap">{cat}</span>
-                </button>
-              ))}
+              {mainCategories.map((cat) => {
+                const backendCategoryName = getCategoryBackendName(cat);
+                const isActive = selectedCategory.toLowerCase() === backendCategoryName.toLowerCase() || 
+                                (selectedCategory === '' && cat === 'Cerca de mí' && location !== '');
+                const isSelected = selectedCategory.toLowerCase() === backendCategoryName.toLowerCase();
+                
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      if (cat === 'Cerca de mí') {
+                        // Para "Cerca de mí" podríamos implementar geolocalización
+                        handleSearch('', '', '');
+                        setSelectedCategory('');
+                      } else {
+                        handleCategoryFilter(backendCategoryName);
+                      }
+                    }}
+                    className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-all ${
+                      isSelected
+                        ? 'bg-blue-600 text-white'
+                        : 'hover:bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      isSelected
+                        ? 'bg-white/20'
+                        : 'bg-gray-100'
+                    }`}>
+                      {getCategoryIcon(cat)}
+                    </div>
+                    <span className="text-xs font-medium whitespace-nowrap">{cat}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
           

@@ -17,20 +17,22 @@ export default function BusinessDetailModal({ businessId, isOpen, onClose }: Bus
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeDirection, setResizeDirection] = useState<string>('');
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
   const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     if (isOpen && businessId) {
       loadBusiness(businessId);
-      // Centrar el modal al abrir
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      setPosition({ x: centerX, y: centerY });
-      setIsInitialized(true);
+      // Resetear posición y tamaño al centro cuando se abre
+      setPosition({ x: 0, y: 0 });
+      setSize({ width: 0, height: 0 }); // 0 significa tamaño por defecto
     } else {
-      setIsInitialized(false);
+      setPosition({ x: 0, y: 0 });
+      setSize({ width: 0, height: 0 });
     }
   }, [isOpen, businessId]);
 
@@ -49,32 +51,119 @@ export default function BusinessDetailModal({ businessId, isOpen, onClose }: Bus
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (modalRef.current) {
       const rect = modalRef.current.getBoundingClientRect();
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      });
-      setIsDragging(true);
+      const containerRect = modalRef.current.parentElement?.getBoundingClientRect();
+      if (containerRect) {
+        // Calcular offset relativo al centro del contenedor
+        const centerX = containerRect.left + containerRect.width / 2;
+        const centerY = containerRect.top + containerRect.height / 2;
+        setDragOffset({
+          x: e.clientX - centerX - position.x,
+          y: e.clientY - centerY - position.y
+        });
+        setIsDragging(true);
+        e.preventDefault();
+      }
+    }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent<HTMLDivElement>, direction: string) => {
+    if (modalRef.current) {
+      e.stopPropagation();
       e.preventDefault();
+      const rect = modalRef.current.getBoundingClientRect();
+      // Si el tamaño es 0, usar el tamaño actual del elemento
+      const currentWidth = size.width > 0 ? size.width : rect.width;
+      const currentHeight = size.height > 0 ? size.height : rect.height;
+      
+      // Guardar el tamaño inicial si es la primera vez que se redimensiona
+      if (size.width === 0 || size.height === 0) {
+        setSize({ width: currentWidth, height: currentHeight });
+      }
+      
+      setResizeStart({
+        x: e.clientX,
+        y: e.clientY,
+        width: currentWidth,
+        height: currentHeight
+      });
+      setResizeDirection(direction);
+      setIsResizing(true);
     }
   };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        const newX = e.clientX - dragOffset.x;
-        const newY = e.clientY - dragOffset.y;
-        setPosition({
-          x: Math.max(50, Math.min(newX, window.innerWidth - 400)),
-          y: Math.max(50, Math.min(newY, window.innerHeight - 200))
-        });
+      if (isResizing && modalRef.current) {
+        const containerRect = modalRef.current.parentElement?.getBoundingClientRect();
+        if (containerRect) {
+          const deltaX = e.clientX - resizeStart.x;
+          const deltaY = e.clientY - resizeStart.y;
+          
+          let newWidth = resizeStart.width;
+          let newHeight = resizeStart.height;
+          let newX = position.x;
+          let newY = position.y;
+          
+          const minWidth = 400;
+          const minHeight = 300;
+          const maxWidth = containerRect.width - 40;
+          const maxHeight = containerRect.height - 40;
+          
+          // Redimensionar según la dirección
+          if (resizeDirection.includes('right')) {
+            newWidth = Math.min(maxWidth, Math.max(minWidth, resizeStart.width + deltaX));
+          }
+          if (resizeDirection.includes('left')) {
+            newWidth = Math.min(maxWidth, Math.max(minWidth, resizeStart.width - deltaX));
+            // Ajustar posición X para mantener el punto de anclaje (el ancho cambió)
+            const widthDiff = newWidth - resizeStart.width;
+            newX = position.x - widthDiff;
+          }
+          if (resizeDirection.includes('bottom')) {
+            newHeight = Math.min(maxHeight, Math.max(minHeight, resizeStart.height + deltaY));
+          }
+          if (resizeDirection.includes('top')) {
+            newHeight = Math.min(maxHeight, Math.max(minHeight, resizeStart.height - deltaY));
+            // Ajustar posición Y para mantener el punto de anclaje (la altura cambió)
+            const heightDiff = newHeight - resizeStart.height;
+            newY = position.y - heightDiff;
+          }
+          
+          setSize({ width: newWidth, height: newHeight });
+          // Actualizar posición solo si se redimensiona desde izquierda o arriba
+          if (resizeDirection.includes('left') || resizeDirection.includes('top')) {
+            setPosition({ x: newX, y: newY });
+          }
+        }
+      } else if (isDragging && modalRef.current) {
+        const rect = modalRef.current.getBoundingClientRect();
+        const containerRect = modalRef.current.parentElement?.getBoundingClientRect();
+        if (containerRect) {
+          // Calcular posición relativa al contenedor centrado
+          const currentWidth = size.width || rect.width;
+          const currentHeight = size.height || rect.height;
+          const newX = e.clientX - containerRect.left - containerRect.width / 2 - dragOffset.x + currentWidth / 2;
+          const newY = e.clientY - containerRect.top - containerRect.height / 2 - dragOffset.y + currentHeight / 2;
+          
+          // Limitar movimiento dentro de los bordes
+          const maxX = containerRect.width / 2 - currentWidth / 2 - 20;
+          const maxY = containerRect.height / 2 - currentHeight / 2 - 20;
+          
+          setPosition({
+            x: Math.max(-maxX, Math.min(newX, maxX)),
+            y: Math.max(-maxY, Math.min(newY, maxY))
+          });
+        }
       }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      setIsResizing(false);
+      setResizeDirection('');
     };
 
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -83,7 +172,7 @@ export default function BusinessDetailModal({ businessId, isOpen, onClose }: Bus
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, isResizing, dragOffset, resizeDirection, resizeStart, position, size]);
 
   if (!isOpen) return null;
 
@@ -110,23 +199,70 @@ export default function BusinessDetailModal({ businessId, isOpen, onClose }: Bus
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 p-4 flex items-center justify-center"
       onClick={onClose}
     >
       <div
         ref={modalRef}
         style={{
-          position: 'absolute',
-          left: isInitialized ? `${Math.max(50, Math.min(position.x - 400, window.innerWidth - 450))}px` : '50%',
-          top: isInitialized ? `${Math.max(50, Math.min(position.y - 300, window.innerHeight - 350))}px` : '50%',
-          transform: isInitialized ? 'none' : 'translate(-50%, -50%)',
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          width: size.width > 0 ? `${size.width}px` : 'auto',
+          height: size.height > 0 ? `${size.height}px` : 'auto',
           maxWidth: '90vw',
           maxHeight: '90vh',
-          cursor: isDragging ? 'grabbing' : 'default'
+          minWidth: '400px',
+          minHeight: '300px',
+          cursor: isDragging ? 'grabbing' : 'default',
+          transition: (isDragging || isResizing) ? 'none' : 'transform 0.2s ease-out'
         }}
-        className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-4xl"
+        className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-4xl relative"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Resize Handles */}
+        {/* Esquinas */}
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'top-left')}
+          className="absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-50"
+          style={{ cursor: 'nwse-resize' }}
+        />
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'top-right')}
+          className="absolute top-0 right-0 w-4 h-4 cursor-nesw-resize z-50"
+          style={{ cursor: 'nesw-resize' }}
+        />
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
+          className="absolute bottom-0 left-0 w-4 h-4 cursor-nesw-resize z-50"
+          style={{ cursor: 'nesw-resize' }}
+        />
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-50"
+          style={{ cursor: 'nwse-resize' }}
+        />
+        
+        {/* Bordes */}
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'top')}
+          className="absolute top-0 left-4 right-4 h-2 cursor-ns-resize z-50"
+          style={{ cursor: 'ns-resize' }}
+        />
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'bottom')}
+          className="absolute bottom-0 left-4 right-4 h-2 cursor-ns-resize z-50"
+          style={{ cursor: 'ns-resize' }}
+        />
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'left')}
+          className="absolute left-0 top-4 bottom-4 w-2 cursor-ew-resize z-50"
+          style={{ cursor: 'ew-resize' }}
+        />
+        <div
+          onMouseDown={(e) => handleResizeStart(e, 'right')}
+          className="absolute right-0 top-4 bottom-4 w-2 cursor-ew-resize z-50"
+          style={{ cursor: 'ew-resize' }}
+        />
+
         {/* Header - Draggable */}
         <div
           onMouseDown={handleMouseDown}
