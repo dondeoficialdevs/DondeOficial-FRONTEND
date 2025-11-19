@@ -50,80 +50,90 @@ export default function LoadingScreen() {
         }}
       ></div>
 
-      {/* Efecto de ondas concéntricas mejoradas */}
+      {/* Efecto de ondas concéntricas mejoradas - Responsive */}
       <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-        {[200, 300, 400, 500].map((size, i) => (
-          <div 
-            key={i}
-            className="absolute rounded-full border"
-            style={{
-              width: `${size}px`,
-              height: `${size}px`,
-              borderColor: '#FF5A00',
-              opacity: 0.15 - (i * 0.03),
-              animation: `pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite ${i * 0.4}s`,
-              boxShadow: `0 0 ${size / 2}px rgba(255, 90, 0, 0.1)`,
-            }}
-          ></div>
-        ))}
+        {[0, 1, 2, 3].map((i) => {
+          // Usar unidades viewport para hacer las ondas responsive
+          const baseSize = 30; // 30vw como base
+          const sizeMultiplier = baseSize + (i * 10); // Incremento de 10vw por cada onda
+          return (
+            <div 
+              key={i}
+              className="absolute rounded-full border"
+              style={{
+                width: `min(${sizeMultiplier}vw, ${sizeMultiplier}vh)`,
+                height: `min(${sizeMultiplier}vw, ${sizeMultiplier}vh)`,
+                borderColor: '#FF5A00',
+                opacity: 0.15 - (i * 0.03),
+                animation: `pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite ${i * 0.4}s`,
+                boxShadow: `0 0 ${sizeMultiplier / 2}px rgba(255, 90, 0, 0.1)`,
+              }}
+            ></div>
+          );
+        })}
       </div>
 
-      {/* Partículas flotantes animadas */}
+      {/* Partículas flotantes animadas - Responsive */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: `${Math.random() * 4 + 2}px`,
-              height: `${Math.random() * 4 + 2}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              backgroundColor: i % 3 === 0 ? '#FF5A00' : '#f1f1f1',
-              opacity: Math.random() * 0.5 + 0.2,
-              animation: `float ${3 + Math.random() * 2}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          ></div>
-        ))}
+        {[...Array(12)].map((_, i) => {
+          // Hacer las partículas más pequeñas en móviles
+          const baseSize = 3;
+          const size = baseSize + Math.random() * 2;
+          return (
+            <div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                backgroundColor: i % 3 === 0 ? '#FF5A00' : '#f1f1f1',
+                opacity: Math.random() * 0.5 + 0.2,
+                animation: `float ${3 + Math.random() * 2}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 2}s`,
+              }}
+            ></div>
+          );
+        })}
       </div>
 
-      {/* Contenido principal */}
-      <div className="text-center relative z-10 animate-fade-in">
+      {/* Contenido principal - Responsive */}
+      <div className="text-center relative z-10 animate-fade-in px-4 py-4 sm:py-8 md:py-12 lg:py-16 max-w-7xl mx-auto w-full min-h-screen flex flex-col items-center justify-center">
         {/* Logo con efecto de entrada */}
-        <div className="mb-8">
-          <div className="flex justify-center mb-6">
+        <div className="mb-4 sm:mb-6 md:mb-8 w-full">
+          <div className="flex justify-center mb-4 sm:mb-6">
             <div 
               className="relative animate-scale-in"
               style={{
                 animation: 'scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
             >
-              <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+              <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-64 lg:h-64 xl:w-80 xl:h-80 2xl:w-96 2xl:h-96">
                 {/* Glow effect alrededor del logo */}
                 <div 
-                  className="absolute inset-0 rounded-full blur-3xl opacity-30 animate-pulse"
+                  className="absolute inset-0 rounded-full blur-2xl sm:blur-3xl opacity-30 animate-pulse"
                   style={{
                     background: 'radial-gradient(circle, #FF5A00 0%, transparent 70%)',
                     transform: 'scale(1.2)',
                   }}
                 ></div>
-                <Image
-                  src="/images/logo/Logo_Dondel.png"
-                  alt="DondeOficial Logo"
-                  fill
+              <Image
+                src="/images/logo/Logo_Dondel.png"
+                alt="DondeOficial Logo"
+                fill
                   className="object-contain drop-shadow-2xl relative z-10"
-                  priority
-                  sizes="(max-width: 640px) 192px, (max-width: 768px) 256px, (max-width: 1024px) 320px, 384px"
+                priority
+                  sizes="(max-width: 480px) 128px, (max-width: 640px) 160px, (max-width: 768px) 192px, (max-width: 1024px) 256px, (max-width: 1280px) 320px, 384px"
                   unoptimized={true}
-                />
+              />
               </div>
             </div>
           </div>
           
           {/* Subtítulo con efecto de escritura */}
           <p 
-            className="text-lg sm:text-xl md:text-2xl font-light tracking-wide px-4 animate-slide-up"
+            className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-light tracking-wide px-2 sm:px-4 animate-slide-up"
             style={{ 
               color: '#f1f1f1',
               animation: 'slideUp 0.8s ease-out 0.3s both',
@@ -133,10 +143,10 @@ export default function LoadingScreen() {
           </p>
         </div>
 
-        {/* Barra de progreso mejorada con diseño moderno */}
-        <div className="w-64 sm:w-80 md:w-96 mx-auto mb-8">
+        {/* Barra de progreso mejorada con diseño moderno - Responsive */}
+        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto mb-4 sm:mb-6 md:mb-8">
           <div 
-            className="h-2 rounded-full overflow-hidden relative"
+            className="h-1.5 sm:h-2 rounded-full overflow-hidden relative"
             style={{ 
               backgroundColor: 'rgba(241, 241, 241, 0.08)',
               boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
@@ -170,16 +180,16 @@ export default function LoadingScreen() {
           </div>
           {/* Porcentaje de carga */}
           <p 
-            className="text-xs mt-2 font-medium"
+            className="text-xs sm:text-sm mt-1 sm:mt-2 font-medium"
             style={{ color: 'rgba(241, 241, 241, 0.6)' }}
           >
             {progress}%
           </p>
         </div>
 
-        {/* Spinner mejorado con efectos 3D */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-20 h-20">
+        {/* Spinner mejorado con efectos 3D - Responsive */}
+        <div className="flex justify-center mb-4 sm:mb-6">
+          <div className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20">
             {/* Glow alrededor del spinner */}
             <div 
               className="absolute inset-0 rounded-full blur-md opacity-30"
@@ -192,8 +202,7 @@ export default function LoadingScreen() {
             <div 
               className="absolute inset-0 rounded-full border-t-transparent animate-spin"
               style={{ 
-                border: '3px solid',
-                borderImage: 'linear-gradient(45deg, #f1f1f1, #FF5A00, #f1f1f1) 1',
+                border: '2px solid',
                 borderColor: '#f1f1f1',
                 animationDuration: '1s',
                 filter: 'drop-shadow(0 0 8px rgba(255, 90, 0, 0.4))',
@@ -201,7 +210,7 @@ export default function LoadingScreen() {
             ></div>
             {/* Anillo medio con efecto de brillo */}
             <div 
-              className="absolute inset-2 rounded-full border-2 border-b-transparent animate-spin"
+              className="absolute inset-1 sm:inset-2 rounded-full border border-b-transparent animate-spin"
               style={{ 
                 borderColor: '#FF5A00',
                 animationDuration: '1.5s',
@@ -211,7 +220,7 @@ export default function LoadingScreen() {
             ></div>
             {/* Anillo interior */}
             <div 
-              className="absolute inset-4 rounded-full border-2 border-r-transparent animate-spin"
+              className="absolute inset-2 sm:inset-4 rounded-full border border-r-transparent animate-spin"
               style={{ 
                 borderColor: '#f1f1f1',
                 animationDuration: '0.8s',
@@ -220,7 +229,7 @@ export default function LoadingScreen() {
             ></div>
             {/* Centro con punto brillante */}
             <div 
-              className="absolute inset-6 rounded-full"
+              className="absolute inset-3 sm:inset-6 rounded-full"
               style={{
                 background: 'radial-gradient(circle, #FF5A00 0%, transparent 70%)',
                 animation: 'pulse 1.5s ease-in-out infinite',
@@ -229,10 +238,10 @@ export default function LoadingScreen() {
           </div>
         </div>
 
-        {/* Texto de carga con efecto mejorado */}
+        {/* Texto de carga con efecto mejorado - Responsive */}
         <div className="flex items-center justify-center gap-2 animate-fade-in-delay">
           <p 
-            className="text-sm font-light tracking-wide"
+            className="text-xs sm:text-sm font-light tracking-wide"
             style={{ 
               color: '#f1f1f1',
               opacity: 0.8,
@@ -242,7 +251,7 @@ export default function LoadingScreen() {
           </p>
           <div className="flex gap-1">
             <div 
-              className="w-1.5 h-1.5 rounded-full"
+              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
               style={{
                 backgroundColor: '#FF5A00',
                 animation: 'bounce 1.4s ease-in-out infinite',
@@ -250,7 +259,7 @@ export default function LoadingScreen() {
               }}
             ></div>
             <div 
-              className="w-1.5 h-1.5 rounded-full"
+              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
               style={{
                 backgroundColor: '#FF5A00',
                 animation: 'bounce 1.4s ease-in-out infinite',
@@ -258,7 +267,7 @@ export default function LoadingScreen() {
               }}
             ></div>
             <div 
-              className="w-1.5 h-1.5 rounded-full"
+              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
               style={{
                 backgroundColor: '#FF5A00',
                 animation: 'bounce 1.4s ease-in-out infinite',
