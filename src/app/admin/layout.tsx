@@ -30,6 +30,7 @@ export default function AdminLayout({
 
       if (!authApi.isAuthenticated()) {
         router.push('/admin/login');
+        setLoading(false);
         return;
       }
 
@@ -41,7 +42,12 @@ export default function AdminLayout({
       } catch (error) {
         console.error('Error verificando autenticación:', error);
         // Si hay error, limpiar y redirigir a login
-        await authApi.logout();
+        try {
+          await authApi.logout();
+        } catch (logoutError) {
+          // Ignorar errores de logout
+          console.error('Error en logout:', logoutError);
+        }
         router.push('/admin/login');
       } finally {
         setLoading(false);
@@ -49,7 +55,8 @@ export default function AdminLayout({
     };
 
     checkAuth();
-  }, [router, pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const handleLogout = async () => {
     await authApi.logout();
