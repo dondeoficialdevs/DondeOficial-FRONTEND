@@ -57,6 +57,7 @@ export default function AdminLayout({
   };
 
   const navItems = [
+    { href: '/admin/verification', label: 'Verificación' },
     { href: '/admin/businesses', label: 'Directorios' },
     { href: '/admin/leads', label: 'Leads' },
     { href: '/admin/newsletter', label: 'Newsletter' },

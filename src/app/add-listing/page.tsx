@@ -191,10 +191,77 @@ export default function AddListingPage() {
         <Header />
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <div className="text-green-600 text-6xl mb-4">✓</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">¡Negocio Enviado!</h1>
-            <p className="text-gray-600 mb-8">
-              Gracias por enviar tu negocio. Lo revisaremos y lo publicaremos pronto.
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                {/* Icono elegante de verificación pendiente */}
+                <div className="relative">
+                  {/* Círculo exterior con gradiente suave */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full -z-10"></div>
+                  
+                  {/* Icono principal - Shield con check */}
+                  <div className="relative bg-white rounded-full p-4 shadow-lg border-2 border-blue-100">
+                    <svg 
+                      className="w-20 h-20 text-blue-600" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      {/* Shield/escudo como base */}
+                      <path 
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        className="opacity-20"
+                      />
+                      {/* Check mark principal */}
+                      <path 
+                        d="M9 12l2 2 4-4" 
+                        strokeWidth="3" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      />
+                      {/* Reloj pequeño en la esquina */}
+                      <circle 
+                        cx="16" 
+                        cy="8" 
+                        r="3" 
+                        strokeWidth="1.5" 
+                        className="opacity-60"
+                      />
+                      <line 
+                        x1="16" 
+                        y1="8" 
+                        x2="16" 
+                        y2="6.5" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round"
+                        className="opacity-60"
+                      />
+                      <line 
+                        x1="16" 
+                        y1="8" 
+                        x2="17.5" 
+                        y2="8" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round"
+                        className="opacity-60"
+                      />
+                    </svg>
+                  </div>
+                  
+                  {/* Punto de notificación animado */}
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">¡Negocio Enviado para Verificación!</h1>
+            <p className="text-gray-600 mb-4">
+              Gracias por enviar tu negocio. Está pendiente de revisión por parte del administrador.
+            </p>
+            <p className="text-gray-500 text-sm mb-8">
+              Tu negocio será revisado y activado en un plazo máximo de <span className="font-semibold text-gray-700">24 a 48 horas hábiles</span> para su publicación en el directorio.
             </p>
             <button
               onClick={() => setSubmitted(false)}

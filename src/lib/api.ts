@@ -299,6 +299,30 @@ export const businessApi = {
   deleteImage: async (businessId: number, imageId: number): Promise<void> => {
     await api.delete(`/businesses/${businessId}/images/${imageId}`);
   },
+
+  // Obtener todos los negocios incluyendo pendientes y rechazados (solo admin)
+  getAllForAdmin: async (): Promise<Business[]> => {
+    const response = await api.get<ApiResponse<Business[]>>('/businesses/admin/all');
+    return response.data.data;
+  },
+
+  // Obtener negocios pendientes de verificación (solo admin)
+  getPending: async (): Promise<Business[]> => {
+    const response = await api.get<ApiResponse<Business[]>>('/businesses/pending/all');
+    return response.data.data;
+  },
+
+  // Aprobar negocio (solo admin)
+  approve: async (id: number): Promise<Business> => {
+    const response = await api.patch<ApiResponse<Business>>(`/businesses/${id}/approve`);
+    return response.data.data;
+  },
+
+  // Rechazar negocio (solo admin)
+  reject: async (id: number): Promise<Business> => {
+    const response = await api.patch<ApiResponse<Business>>(`/businesses/${id}/reject`);
+    return response.data.data;
+  },
 };
 
 export const categoryApi = {

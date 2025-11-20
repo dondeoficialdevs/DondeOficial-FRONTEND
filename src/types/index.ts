@@ -23,6 +23,7 @@ export interface Business {
   instagram_url?: string;
   tiktok_url?: string;
   youtube_url?: string;
+  status?: 'pending' | 'approved' | 'rejected';
   created_at: string;
   updated_at: string;
 }

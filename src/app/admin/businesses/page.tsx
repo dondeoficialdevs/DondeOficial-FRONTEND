@@ -24,7 +24,8 @@ export default function BusinessesPage() {
     try {
       setLoading(true);
       setError(null);
-      const businessesData = await businessApi.getAll();
+      // Usar getAllForAdmin para ver todos los negocios (incluyendo pendientes y rechazados)
+      const businessesData = await businessApi.getAllForAdmin();
       setBusinesses(businessesData);
     } catch (error) {
       console.error('Error loading businesses:', error);
@@ -171,6 +172,9 @@ export default function BusinessesPage() {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Fecha
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -194,6 +198,17 @@ export default function BusinessesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{business.email || 'Sin email'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        business.status === 'approved' 
+                          ? 'bg-green-100 text-green-800' 
+                          : business.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {business.status === 'approved' ? 'Aprobado' : business.status === 'pending' ? 'Pendiente' : 'Rechazado'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{formatDate(business.created_at)}</div>
