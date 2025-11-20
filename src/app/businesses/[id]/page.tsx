@@ -624,14 +624,14 @@ export default function BusinessDetail() {
                     href={`mailto:${business.email}`}
                     className="flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all group"
                   >
-                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform flex-shrink-0">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-gray-600 font-bold mb-1">Email</p>
-                      <p className="text-gray-900 font-bold text-base truncate">{business.email}</p>
+                      <p className="text-gray-900 font-bold text-base truncate" title={business.email}>{business.email}</p>
                     </div>
                   </a>
                 )}
