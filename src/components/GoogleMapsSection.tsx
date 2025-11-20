@@ -457,20 +457,20 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                     />
                     
                     {/* Ubicación "Cerca de mí" o ciudad personalizada integrada en desktop */}
-                    <div className="hidden md:flex items-center gap-0 border-l border-gray-300">
+                    <div className="hidden md:flex items-center gap-0 border-l border-gray-300 min-w-0 flex-shrink">
                       {!isUsingCustomLocation ? (
-                        <div className="flex items-center gap-2 px-3 py-2.5">
+                        <div className="flex items-center gap-2 px-3 py-2.5 min-w-0">
                           <button
                             type="button"
                             onClick={handleNearMeClick}
-                            className="flex items-center gap-2 hover:bg-gray-200 transition-colors cursor-pointer rounded px-2 py-1"
+                            className="flex items-center gap-2 hover:bg-gray-200 transition-colors cursor-pointer rounded px-2 py-1 min-w-0 flex-1"
                             aria-label="Buscar cerca de mí"
                           >
                             <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap">{location}</span>
+                            <span className="text-sm text-gray-900 font-semibold truncate max-w-[120px]">{location}</span>
                           </button>
                           <button
                             type="button"
@@ -478,7 +478,7 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                               setIsUsingCustomLocation(true);
                               setCustomLocation('');
                             }}
-                            className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                            className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors flex-shrink-0"
                             title="Escribir otra ciudad"
                           >
                             Cambiar
