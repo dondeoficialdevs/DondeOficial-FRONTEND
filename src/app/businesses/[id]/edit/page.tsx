@@ -63,6 +63,15 @@ export default function EditBusinessPage() {
       setCategories(categoriesData);
       
       // Pre-cargar formulario con datos del negocio
+      // Convertir has_offer a boolean
+      const rawHasOffer = businessData.has_offer;
+      const hasOffer = 
+        typeof rawHasOffer === 'boolean' 
+          ? rawHasOffer
+          : (typeof rawHasOffer === 'string' && (rawHasOffer === 'true' || rawHasOffer === '1' || rawHasOffer.toLowerCase() === 't'))
+          || (typeof rawHasOffer === 'number' && rawHasOffer === 1)
+          || false;
+      
       setFormData({
         name: businessData.name || '',
         description: businessData.description || '',
@@ -80,7 +89,7 @@ export default function EditBusinessPage() {
         whatsapp_url: businessData.whatsapp_url || '',
         price: businessData.price?.toString() || '',
         offer_price: businessData.offer_price?.toString() || '',
-        has_offer: businessData.has_offer || false,
+        has_offer: hasOffer,
         offer_description: businessData.offer_description || ''
       });
     } catch (error) {
