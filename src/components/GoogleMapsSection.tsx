@@ -63,10 +63,22 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [location, setLocation] = useState('Cerca de mí');
+  const [customLocation, setCustomLocation] = useState('');
+  const [isUsingCustomLocation, setIsUsingCustomLocation] = useState(false);
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const [showHint, setShowHint] = useState(true);
+
+  // Lista de ciudades comunes de Colombia
+  const colombianCities = [
+    'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Cúcuta', 'Soledad',
+    'Ibagué', 'Bucaramanga', 'Santa Marta', 'Villavicencio', 'Pereira', 'Valledupar',
+    'Manizales', 'Buenaventura', 'Pasto', 'Neiva', 'Armenia', 'Sincelejo', 'Montería',
+    'Popayán', 'Riohacha', 'Tunja', 'Quibdó', 'Florencia', 'Yopal', 'Mocoa', 'Leticia'
+  ];
 
   // Filtrar negocios que tienen coordenadas válidas
   const businessesWithCoords = useMemo(() => {
@@ -139,6 +151,14 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Cerrar sugerencias cuando se cambia de modo
+  useEffect(() => {
+    if (!isUsingCustomLocation) {
+      setShowCitySuggestions(false);
+      setCitySuggestions([]);
+    }
+  }, [isUsingCustomLocation]);
 
   // Detectar ubicación del usuario automáticamente
   useEffect(() => {
@@ -226,6 +246,99 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
 
   const handleClearLocation = () => {
     setLocation('Cerca de mí');
+    setCustomLocation('');
+    setIsUsingCustomLocation(false);
+    // Si hay ubicación del usuario guardada, restaurar el centro del mapa
+    if (userLocation) {
+      setMapCenter(userLocation);
+      setMapZoom(13);
+    } else {
+      // Si no hay ubicación, volver al centro basado en negocios
+      const newCenter = calculateCenter(businessesWithCoords);
+      setMapCenter(newCenter);
+      setMapZoom(12);
+    }
+    // Limpiar búsqueda de ubicación
+    onSearch(searchTerm || '', selectedCategory || undefined, '');
+  };
+
+  const handleCustomLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCustomLocation(value);
+    if (value.trim()) {
+      setIsUsingCustomLocation(true);
+      setLocation(value);
+      
+      // Filtrar ciudades que coincidan con lo escrito
+      const filtered = colombianCities.filter(city => 
+        city.toLowerCase().includes(value.toLowerCase())
+      );
+      setCitySuggestions(filtered);
+      setShowCitySuggestions(filtered.length > 0 && value.length > 0);
+      
+      // Buscar con la ciudad personalizada solo si no hay sugerencias o si es una ciudad exacta
+      if (filtered.length === 0 || colombianCities.includes(value)) {
+        onSearch(searchTerm || '', selectedCategory || undefined, value);
+      }
+    } else {
+      setIsUsingCustomLocation(false);
+      setLocation('Cerca de mí');
+      setCitySuggestions([]);
+      setShowCitySuggestions(false);
+    }
+  };
+
+  const handleCitySuggestionClick = (city: string) => {
+    setCustomLocation(city);
+    setLocation(city);
+    setIsUsingCustomLocation(true);
+    setShowCitySuggestions(false);
+    setCitySuggestions([]);
+    // Buscar con la ciudad seleccionada
+    onSearch(searchTerm || '', selectedCategory || undefined, city);
+  };
+
+  const handleCustomLocationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customLocation.trim()) {
+      setIsUsingCustomLocation(true);
+      setLocation(customLocation);
+      onSearch(searchTerm || '', selectedCategory || undefined, customLocation);
+    }
+  };
+
+  const handleNearMeClick = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+          const newUserLocation: [number, number] = [userLat, userLng];
+          setUserLocation(newUserLocation);
+          setMapCenter(newUserLocation);
+          setMapZoom(13);
+          setLocation('Cerca de mí');
+          setCustomLocation('');
+          setIsUsingCustomLocation(false);
+          setLocationError(null);
+          // Buscar negocios cercanos usando la ubicación como coordenadas
+          onSearch(searchTerm || '', selectedCategory || undefined, `${userLat},${userLng}`);
+        },
+        (error) => {
+          console.error('Error obteniendo ubicación:', error);
+          setLocationError('No se pudo obtener tu ubicación. Verifica los permisos de geolocalización.');
+          alert('No se pudo obtener tu ubicación. Por favor, verifica que hayas permitido el acceso a tu ubicación.');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      setLocationError('Tu navegador no soporta geolocalización');
+      alert('Tu navegador no soporta geolocalización.');
+    }
   };
 
   // Función para obtener direcciones/rutas
@@ -292,9 +405,9 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
           {/* Buscador overlay que aparece encima del mapa */}
           {showSearchBar && (
             <div className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 z-[1000] search-bar-container">
-              <div className="bg-blue-900 rounded-lg p-2 sm:p-4 shadow-2xl">
+              <div className="bg-blue-900 md:bg-blue-800 rounded-lg md:rounded-xl p-2 sm:p-4 md:p-5 shadow-2xl">
                 {/* Primera fila: Categorías, Búsqueda, Menú y Cerrar */}
-                <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-0">
+                <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-0 md:gap-3 md:flex-nowrap">
                   {/* Botón Categorías */}
                   <div className="relative category-dropdown flex-shrink-0">
                     <button
@@ -302,11 +415,11 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                         setShowCategoryDropdown(!showCategoryDropdown);
                         setShowMenuDropdown(false);
                       }}
-                      className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-xs sm:text-sm"
+                      className="flex items-center gap-1 sm:gap-2 md:gap-2.5 px-2 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 bg-gray-200 md:bg-gray-100 text-gray-700 rounded-lg md:rounded-xl hover:bg-gray-300 md:hover:bg-gray-200 transition-colors font-medium text-xs sm:text-sm md:text-base shadow-sm md:shadow"
                     >
                       <span className="font-semibold hidden sm:inline">Categorías</span>
                       <span className="font-semibold sm:hidden">Cat.</span>
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
@@ -333,27 +446,134 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                     )}
                   </div>
 
-                  {/* Campo de búsqueda */}
-                  <form onSubmit={handleSearchSubmit} className="flex-1 min-w-[120px] flex items-center gap-1 sm:gap-2">
+                  {/* Campo de búsqueda con ubicación integrada en desktop */}
+                  <form id="search-form" onSubmit={handleSearchSubmit} className="flex-1 min-w-[120px] flex items-center gap-1 sm:gap-2 md:gap-0 md:bg-gray-100 md:rounded-xl md:shadow">
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="¿Qué buscas?"
-                      className="flex-1 px-2 sm:px-4 py-2 sm:py-2.5 bg-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-xs sm:text-sm"
+                      className="flex-1 px-2 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 bg-gray-200 md:bg-transparent rounded-lg md:rounded-l-xl md:rounded-r-none text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:focus:ring-blue-600 font-medium text-xs sm:text-sm md:text-base"
                     />
-
-                    {/* Botón de búsqueda */}
-                    <button
-                      type="submit"
-                      className="px-2 sm:px-4 py-2 sm:py-2.5 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
-                      aria-label="Buscar"
-                    >
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </button>
+                    
+                    {/* Ubicación "Cerca de mí" o ciudad personalizada integrada en desktop */}
+                    <div className="hidden md:flex items-center gap-0 border-l border-gray-300">
+                      {!isUsingCustomLocation ? (
+                        <div className="flex items-center gap-2 px-3 py-2.5">
+                          <button
+                            type="button"
+                            onClick={handleNearMeClick}
+                            className="flex items-center gap-2 hover:bg-gray-200 transition-colors cursor-pointer rounded px-2 py-1"
+                            aria-label="Buscar cerca de mí"
+                          >
+                            <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap">{location}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsUsingCustomLocation(true);
+                              setCustomLocation('');
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                            title="Escribir otra ciudad"
+                          >
+                            Cambiar
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative flex-1">
+                          <form onSubmit={handleCustomLocationSubmit} className="flex items-center gap-2 px-3 py-2.5">
+                            <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <input
+                              type="text"
+                              value={customLocation}
+                              onChange={handleCustomLocationChange}
+                              onFocus={() => {
+                                if (citySuggestions.length > 0 && customLocation.length > 0) {
+                                  setShowCitySuggestions(true);
+                                }
+                              }}
+                              placeholder="Escribe una ciudad..."
+                              className="text-sm text-gray-900 font-semibold bg-transparent border-none outline-none focus:outline-none flex-1 min-w-[120px] placeholder-gray-400"
+                              autoFocus
+                              onBlur={() => {
+                                // Delay para permitir el click en las sugerencias
+                                setTimeout(() => {
+                                  setShowCitySuggestions(false);
+                                  if (!customLocation.trim()) {
+                                    setIsUsingCustomLocation(false);
+                                    setLocation('Cerca de mí');
+                                  }
+                                }, 200);
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsUsingCustomLocation(false);
+                                setCustomLocation('');
+                                setLocation('Cerca de mí');
+                                setShowCitySuggestions(false);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                              title="Usar mi ubicación"
+                            >
+                              Mi ubicación
+                            </button>
+                          </form>
+                          {/* Sugerencias de ciudades */}
+                          {showCitySuggestions && citySuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-48 overflow-y-auto">
+                              {citySuggestions.map((city, index) => (
+                                <button
+                                  key={index}
+                                  type="button"
+                                  onClick={() => handleCitySuggestionClick(city)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors text-sm font-medium text-gray-900"
+                                >
+                                  {city}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleClearLocation}
+                        className="text-gray-600 hover:text-gray-900 flex-shrink-0 px-2"
+                        aria-label="Limpiar ubicación"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
                   </form>
+
+                  {/* Botón para cerrar el buscador */}
+                  <button
+                    onClick={() => {
+                      setShowSearchBar(false);
+                      setSearchTerm('');
+                      setSelectedCategory('');
+                      setLocation('Cerca de mí');
+                    }}
+                    className="px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-red-600 md:bg-red-500 text-white rounded-lg md:rounded-xl hover:bg-red-700 md:hover:bg-red-600 transition-colors flex-shrink-0 shadow-sm md:shadow"
+                    title="Cerrar buscador"
+                    aria-label="Cerrar buscador"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
 
                   {/* Botón con menú desplegable */}
                   <div className="relative menu-dropdown flex-shrink-0">
@@ -362,10 +582,10 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                         setShowMenuDropdown(!showMenuDropdown);
                         setShowCategoryDropdown(false);
                       }}
-                      className="px-2 sm:px-4 py-2 sm:py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-xs sm:text-sm"
+                      className="px-2 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 bg-teal-600 md:bg-teal-500 text-white rounded-lg md:rounded-xl hover:bg-teal-700 md:hover:bg-teal-600 transition-colors font-medium text-xs sm:text-sm md:text-base shadow-sm md:shadow"
                       aria-label="Menú"
                     >
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                     </button>
@@ -377,9 +597,6 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                             ANUNCIA TU NEGOCIO
                           </Link>
                           <div className="border-t border-teal-500 my-1"></div>
-                          <Link href="#" className="block px-3 sm:px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium text-xs sm:text-sm" onClick={() => setShowMenuDropdown(false)}>
-                            HAZ CRECER TU NEGOCIO
-                          </Link>
                           <Link href="/admin/login" className="block px-3 sm:px-4 py-2 text-white hover:bg-teal-700 transition-colors font-medium text-xs sm:text-sm" onClick={() => setShowMenuDropdown(false)}>
                             INICIAR SESIÓN
                           </Link>
@@ -388,44 +605,123 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                     )}
                   </div>
 
-                  {/* Botón para cerrar el buscador */}
+                  {/* Botón de búsqueda (lupa) - al final */}
                   <button
-                    onClick={() => {
-                      setShowSearchBar(false);
-                      setSearchTerm('');
-                      setSelectedCategory('');
-                      setLocation('Cerca de mí');
+                    type="submit"
+                    form="search-form"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSearchSubmit(e as any);
                     }}
-                    className="px-2 sm:px-3 py-2 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex-shrink-0"
-                    title="Cerrar buscador"
-                    aria-label="Cerrar buscador"
+                    className="px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-blue-800 md:bg-blue-700 text-white rounded-lg md:rounded-xl hover:bg-blue-700 md:hover:bg-blue-600 transition-colors flex-shrink-0 shadow-sm md:shadow"
+                    aria-label="Buscar"
                   >
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
                 </div>
 
-                {/* Segunda fila: Filtro de ubicación (solo en móvil cuando hay espacio, o siempre visible) */}
-                {location && (
-                  <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2.5 bg-white rounded-lg mt-2 sm:mt-0 sm:inline-flex">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                {/* Segunda fila: Filtro de ubicación (solo en móvil) */}
+                <div className="flex md:hidden items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2.5 bg-white rounded-lg mt-2 w-full">
+                  {!isUsingCustomLocation ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <button
+                        type="button"
+                        onClick={handleNearMeClick}
+                        className="flex items-center gap-2 flex-1 hover:bg-gray-50 transition-colors rounded px-2 py-1"
+                        aria-label="Buscar cerca de mí"
+                      >
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="text-xs sm:text-sm text-gray-900 font-semibold truncate flex-1 text-left">{location}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsUsingCustomLocation(true);
+                          setCustomLocation('');
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+                        title="Escribir otra ciudad"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative flex-1">
+                      <form onSubmit={handleCustomLocationSubmit} className="flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <input
+                          type="text"
+                          value={customLocation}
+                          onChange={handleCustomLocationChange}
+                          onFocus={() => {
+                            if (citySuggestions.length > 0 && customLocation.length > 0) {
+                              setShowCitySuggestions(true);
+                            }
+                          }}
+                          placeholder="Escribe una ciudad..."
+                          className="text-xs sm:text-sm text-gray-900 font-semibold bg-transparent border-none outline-none focus:outline-none flex-1 placeholder-gray-400"
+                          autoFocus
+                          onBlur={() => {
+                            // Delay para permitir el click en las sugerencias
+                            setTimeout(() => {
+                              setShowCitySuggestions(false);
+                              if (!customLocation.trim()) {
+                                setIsUsingCustomLocation(false);
+                                setLocation('Cerca de mí');
+                              }
+                            }, 200);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsUsingCustomLocation(false);
+                            setCustomLocation('');
+                            setLocation('Cerca de mí');
+                            setShowCitySuggestions(false);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+                          title="Usar mi ubicación"
+                        >
+                          Mi ubicación
+                        </button>
+                      </form>
+                      {/* Sugerencias de ciudades - móvil */}
+                      {showCitySuggestions && citySuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-48 overflow-y-auto">
+                          {citySuggestions.map((city, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => handleCitySuggestionClick(city)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors text-xs sm:text-sm font-medium text-gray-900"
+                            >
+                              {city}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleClearLocation}
+                    className="text-gray-600 hover:text-gray-900 flex-shrink-0"
+                    aria-label="Limpiar ubicación"
+                  >
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <span className="text-xs sm:text-sm text-gray-900 font-semibold truncate flex-1">{location}</span>
-                    <button
-                      type="button"
-                      onClick={handleClearLocation}
-                      className="text-gray-600 hover:text-gray-900 flex-shrink-0"
-                      aria-label="Limpiar ubicación"
-                    >
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+                  </button>
+                </div>
               </div>
 
               {/* Lista de negocios encontrados */}
