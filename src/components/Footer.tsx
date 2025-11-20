@@ -61,7 +61,9 @@ export default function Footer() {
             {/* Social Media */}
             <div className="flex space-x-4 mb-6">
               <a 
-                href="#" 
+                href="https://www.facebook.com/profile.php?id=61573619618382" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 bg-[#1877F2] hover:bg-[#166FE5] rounded-lg flex items-center justify-center transition-all duration-200 group"
                 title="Síguenos en Facebook"
                 aria-label="Seguir a DondeOficial en Facebook"
@@ -71,7 +73,9 @@ export default function Footer() {
                 </svg>
               </a>
               <a 
-                href="#" 
+                href="https://www.instagram.com/dondeoficial?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:opacity-90 rounded-lg flex items-center justify-center transition-all duration-200 group"
                 title="Síguenos en Instagram"
                 aria-label="Seguir a DondeOficial en Instagram"
