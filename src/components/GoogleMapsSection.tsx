@@ -433,8 +433,13 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
                               onClick={() => {
                                 setSelectedCategory(category.name);
                                 setShowCategoryDropdown(false);
+                                // Ejecutar búsqueda con la categoría seleccionada
+                                const locationToUse = location === 'Cerca de mí' ? '' : location;
+                                onSearch(searchTerm, category.name, locationToUse);
                               }}
-                              className="w-full text-left px-3 sm:px-4 py-2 hover:bg-gray-100 transition-colors text-xs sm:text-sm font-medium text-gray-900"
+                              className={`w-full text-left px-3 sm:px-4 py-2 hover:bg-gray-100 transition-colors text-xs sm:text-sm font-medium ${
+                                selectedCategory === category.name ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-900'
+                              }`}
                             >
                               {category.name}
                             </button>
