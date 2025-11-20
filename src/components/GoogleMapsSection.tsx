@@ -607,11 +607,10 @@ export default function GoogleMapsSection({ businesses, onSearch }: GoogleMapsSe
 
                   {/* Botón de búsqueda (lupa) - al final */}
                   <button
-                    type="submit"
-                    form="search-form"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSearchSubmit(e as any);
+                    type="button"
+                    onClick={() => {
+                      const locationToUse = location === 'Cerca de mí' ? '' : location;
+                      onSearch(searchTerm, selectedCategory || undefined, locationToUse);
                     }}
                     className="px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-blue-800 md:bg-blue-700 text-white rounded-lg md:rounded-xl hover:bg-blue-700 md:hover:bg-blue-600 transition-colors flex-shrink-0 shadow-sm md:shadow"
                     aria-label="Buscar"
