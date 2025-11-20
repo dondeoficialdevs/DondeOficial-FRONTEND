@@ -26,7 +26,11 @@ export default function EditBusinessPage() {
     facebook_url: '',
     instagram_url: '',
     tiktok_url: '',
-    whatsapp_url: ''
+    whatsapp_url: '',
+    price: '',
+    offer_price: '',
+    has_offer: false,
+    offer_description: ''
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +77,11 @@ export default function EditBusinessPage() {
         facebook_url: businessData.facebook_url || '',
         instagram_url: businessData.instagram_url || '',
         tiktok_url: businessData.tiktok_url || '',
-        whatsapp_url: businessData.whatsapp_url || ''
+        whatsapp_url: businessData.whatsapp_url || '',
+        price: businessData.price?.toString() || '',
+        offer_price: businessData.offer_price?.toString() || '',
+        has_offer: businessData.has_offer || false,
+        offer_description: businessData.offer_description || ''
       });
     } catch (error) {
       console.error('Error loading data:', error);
@@ -114,10 +122,12 @@ export default function EditBusinessPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
     
     // Clear error for this field
@@ -144,7 +154,11 @@ export default function EditBusinessPage() {
         ...formData,
         category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
         latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined
+        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
+        price: formData.price ? parseFloat(formData.price) : undefined,
+        offer_price: formData.offer_price ? parseFloat(formData.offer_price) : undefined,
+        has_offer: formData.has_offer || false,
+        offer_description: formData.offer_description || undefined
       };
 
       await businessApi.update(business.id, businessData);
@@ -455,6 +469,110 @@ export default function EditBusinessPage() {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Sección de Precios y Ofertas */}
+            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-red-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Precios y Ofertas</h3>
+                  <p className="text-sm text-gray-600">Agrega precios y ofertas para atraer más clientes</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Precio Normal */}
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+                    Precio Regular (COP)
+                  </label>
+                  <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder-gray-400 bg-white"
+                    placeholder="Ej: 35000"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Precio normal en pesos colombianos
+                  </p>
+                </div>
+
+                {/* Precio con Oferta */}
+                <div>
+                  <label htmlFor="offer_price" className="block text-sm font-medium text-gray-700 mb-2">
+                    Precio con Oferta (COP)
+                  </label>
+                  <input
+                    type="number"
+                    id="offer_price"
+                    name="offer_price"
+                    value={formData.offer_price}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder-gray-400 bg-white"
+                    placeholder="Ej: 25000"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Precio promocional (opcional)
+                  </p>
+                </div>
+              </div>
+
+              {/* Checkbox para activar oferta */}
+              <div className="mt-4">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="has_offer"
+                    name="has_offer"
+                    checked={formData.has_offer}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        has_offer: e.target.checked
+                      }));
+                    }}
+                    className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">Tengo una oferta activa</span>
+                    <p className="text-xs text-gray-500">Marca esta opción si deseas mostrar este negocio con oferta</p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Descripción de la oferta */}
+              {formData.has_offer && (
+                <div className="mt-4">
+                  <label htmlFor="offer_description" className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción de la Oferta
+                  </label>
+                  <input
+                    type="text"
+                    id="offer_description"
+                    name="offer_description"
+                    value={formData.offer_description}
+                    onChange={handleChange}
+                    maxLength={200}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder-gray-400 bg-white"
+                    placeholder="Ej: Descuento especial del 28% esta semana"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Descripción breve de la oferta (máximo 200 caracteres)
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>

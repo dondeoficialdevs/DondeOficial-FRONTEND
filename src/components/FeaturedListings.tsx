@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Business } from '../types';
 import Link from 'next/link';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -13,6 +14,17 @@ interface FeaturedListingsProps {
 
 export default function FeaturedListings({ businesses, loading, onBusinessClick }: FeaturedListingsProps) {
   const { toggleFavorite, isFavorite } = useFavorites();
+  const [showAll, setShowAll] = useState(false);
+  
+  const initialDisplayCount = 9;
+  const displayedBusinesses = showAll ? businesses : businesses.slice(0, initialDisplayCount);
+  const hasMore = businesses.length > initialDisplayCount;
+
+  // Resetear showAll cuando cambien los negocios (al aplicar un filtro)
+  // Usamos una combinación de length y el primer ID para detectar cambios reales
+  useEffect(() => {
+    setShowAll(false);
+  }, [businesses.length, businesses[0]?.id]);
 
   if (loading) {
     return (
@@ -43,7 +55,7 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
         {businesses.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {businesses.slice(0, 6).map((business) => (
+              {displayedBusinesses.map((business) => (
               <div key={business.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group">
                 {/* Image Section con Slider (máximo 3 imágenes) */}
                 <div className="h-56 relative overflow-hidden">
@@ -60,6 +72,18 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
                   ) : (
                     <div className="h-full bg-linear-to-br from-blue-100 to-blue-200 relative overflow-hidden">
                       <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
+                    </div>
+                  )}
+                  
+                  {/* Badge de Ofertas */}
+                  {(business.has_offer === true || business.has_offer === 'true' || business.has_offer === 't' || business.has_offer === 1) && (
+                    <div className="absolute top-2 left-2 z-20">
+                      <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-md text-xs font-bold shadow-lg flex items-center space-x-1.5">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.179 4.455a1 1 0 01-1.934 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.179-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+                        </svg>
+                        <span>OFERTA</span>
+                      </div>
                     </div>
                   )}
                   
@@ -104,13 +128,26 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
                   {/* Rating and Reviews */}
                   <div className="flex items-center mb-4">
                     <div className="flex items-center space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
+                      {[...Array(5)].map((_, i) => {
+                        const rating = Number(business.average_rating) || 0;
+                        const filled = i < Math.round(rating);
+                        return (
+                          <svg 
+                            key={i} 
+                            className={`w-4 h-4 ${filled ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        );
+                      })}
                     </div>
-                    <span className="ml-2 text-sm text-gray-600 font-medium">(24 Reseñas)</span>
+                    <span className="ml-2 text-sm text-gray-600 font-medium">
+                      ({(() => {
+                        const total = Number(business.total_reviews) || 0;
+                        return `${total} ${total === 1 ? 'Reseña' : 'Reseñas'}`;
+                      })()})
+                    </span>
                   </div>
 
                   {/* Contact Info */}
@@ -187,17 +224,24 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
             </div>
             
             {/* Botón Ver Más */}
-            <div className="text-center mt-12">
-              <Link
-                href="/listings"
-                className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                <span>Ver Más</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-            </div>
+            {hasMore && (
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  <span>{showAll ? 'Ver Menos' : 'Ver Más'}</span>
+                  <svg 
+                    className={`w-5 h-5 transition-transform duration-200 ${showAll ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <div className="text-center py-16">

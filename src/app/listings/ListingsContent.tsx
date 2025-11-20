@@ -13,6 +13,8 @@ export default function ListingsContent() {
   const searchParams = useSearchParams();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [loadingCounts, setLoadingCounts] = useState(true);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -20,10 +22,29 @@ export default function ListingsContent() {
   const [sortBy, setSortBy] = useState('most_sold');
   const [priceFilters, setPriceFilters] = useState<string[]>(['all']);
   const [ratingFilters, setRatingFilters] = useState<string[]>(['all']);
+  const [sellerFilters, setSellerFilters] = useState<string[]>(['Todas']);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<'categories' | 'featured'>('featured');
   const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAllBusinesses, setShowAllBusinesses] = useState(false);
+
+  // Cargar conteos de categorías de forma independiente y temprana
+  const loadCategoryCounts = async () => {
+    try {
+      const countsData = await categoryApi.getCounts();
+      const countsMap: Record<string, number> = {};
+      countsData.forEach((item: { name: string; count: number }) => {
+        countsMap[item.name.toUpperCase()] = item.count;
+      });
+      setCategoryCounts(countsMap);
+    } catch (error) {
+      console.error('Error loading category counts:', error);
+      // En caso de error, mantener el objeto vacío
+    } finally {
+      setLoadingCounts(false);
+    }
+  };
 
   const loadInitialData = async (initialCategory?: string) => {
     try {
@@ -51,6 +72,11 @@ export default function ListingsContent() {
     }
   };
 
+  // Cargar conteos de categorías inmediatamente al montar el componente
+  useEffect(() => {
+    loadCategoryCounts();
+  }, []);
+
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam) {
@@ -60,8 +86,15 @@ export default function ListingsContent() {
     } else {
       loadInitialData();
     }
+    // Resetear showAll cuando cambien los parámetros de búsqueda
+    setShowAllBusinesses(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Resetear showAll cuando cambien los negocios o filtros
+  useEffect(() => {
+    setShowAllBusinesses(false);
+  }, [businesses.length, priceFilters, ratingFilters, sellerFilters, sortBy]);
 
   const handleSearch = async (search: string, category?: string, loc?: string) => {
     setLoading(true);
@@ -209,6 +242,95 @@ export default function ListingsContent() {
     }
   };
 
+  const toggleSellerFilter = (value: string) => {
+    if (value === 'Todas') {
+      setSellerFilters(['Todas']);
+    } else {
+      setSellerFilters(prev => {
+        const newFilters = prev.filter(f => f !== 'Todas');
+        if (newFilters.includes(value)) {
+          return newFilters.length > 1 ? newFilters.filter(f => f !== value) : ['Todas'];
+        }
+        return [...newFilters, value];
+      });
+    }
+  };
+
+  // Función para filtrar negocios según los filtros aplicados
+  const getFilteredBusinesses = () => {
+    let filtered = [...businesses];
+
+    // Filtro por precio
+    if (!priceFilters.includes('all') && priceFilters.length > 0) {
+      filtered = filtered.filter(business => {
+        // Usar el precio con oferta si existe, sino el precio normal
+        const businessPrice = Number(business.offer_price) || Number(business.price) || 0;
+        
+        // Verificar si el precio del negocio está en alguno de los rangos seleccionados
+        return priceFilters.some(priceFilter => {
+          if (priceFilter === 'all') return true;
+          
+          if (priceFilter === '0-25000') {
+            return businessPrice > 0 && businessPrice <= 25000;
+          } else if (priceFilter === '25000-35000') {
+            return businessPrice > 25000 && businessPrice <= 35000;
+          } else if (priceFilter === '35000-55000') {
+            return businessPrice > 35000 && businessPrice <= 55000;
+          } else if (priceFilter === '55000+') {
+            return businessPrice > 55000;
+          }
+          
+          return false;
+        });
+      });
+    }
+
+    // Filtro por calificación
+    if (!ratingFilters.includes('all') && ratingFilters.length > 0) {
+      const minRating = Math.min(...ratingFilters.map(r => parseInt(r)));
+      filtered = filtered.filter(business => {
+        const rating = Number(business.average_rating) || 0;
+        return rating >= minRating;
+      });
+    }
+
+    // Filtro por vendedor (por ahora solo Marketplace, ya que eliminamos Cuponatic)
+    if (!sellerFilters.includes('Todas') && sellerFilters.length > 0) {
+      // Este filtro se puede implementar cuando se agregue información del vendedor
+      // Por ahora, si está seleccionado "Marketplace", mostramos todos
+      // Si no está seleccionado "Todas", no mostramos nada (lógica a ajustar según necesidades)
+    }
+
+    // Ordenamiento
+    if (sortBy === 'rating') {
+      filtered.sort((a, b) => {
+        const ratingA = Number(a.average_rating) || 0;
+        const ratingB = Number(b.average_rating) || 0;
+        return ratingB - ratingA;
+      });
+    } else if (sortBy === 'newest') {
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA;
+      });
+    } else if (sortBy === 'price_low') {
+      filtered.sort((a, b) => {
+        const priceA = Number(a.offer_price) || Number(a.price) || 0;
+        const priceB = Number(b.offer_price) || Number(b.price) || 0;
+        return priceA - priceB;
+      });
+    } else if (sortBy === 'price_high') {
+      filtered.sort((a, b) => {
+        const priceA = Number(a.offer_price) || Number(a.price) || 0;
+        const priceB = Number(b.offer_price) || Number(b.price) || 0;
+        return priceB - priceA;
+      });
+    }
+
+    return filtered;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -334,29 +456,38 @@ export default function ListingsContent() {
                 {activeTab === 'featured' && (
                   <div className="space-y-0">
                     {[
-                      { name: 'BELLEZA', count: 718 },
-                      { name: 'ENTRETENIMIENTO', count: 220 },
-                      { name: 'GASTRONOMÍA', count: 146 },
-                      { name: 'VIAJES Y TURISMO', count: 279 },
-                      { name: 'BIENESTAR Y SALUD', count: 507 },
-                      { name: 'SERVICIOS', count: 269 },
-                      { name: 'PRODUCTOS', count: 205 },
-                      { name: 'ESPECIALES', count: 485 },
-                    ].map((cat) => (
-                      <button
-                        key={cat.name}
-                        onClick={() => handleCategoryFilter(cat.name.toLowerCase())}
-                        className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors border-b border-gray-100"
-                      >
-                        <span className="font-medium">{cat.name}</span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-500">({cat.count})</span>
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </button>
-                    ))}
+                      { name: 'BELLEZA' },
+                      { name: 'ENTRETENIMIENTO' },
+                      { name: 'GASTRONOMÍA' },
+                      { name: 'VIAJES Y TURISMO' },
+                      { name: 'BIENESTAR Y SALUD' },
+                      { name: 'SERVICIOS' },
+                      { name: 'PRODUCTOS' },
+                      { name: 'ESPECIALES' },
+                    ].map((cat) => {
+                      const count = loadingCounts ? (
+                        <span className="inline-block w-8 h-4 bg-gray-200 animate-pulse rounded"></span>
+                      ) : (
+                        categoryCounts[cat.name] || 0
+                      );
+                      return (
+                        <button
+                          key={cat.name}
+                          onClick={() => handleCategoryFilter(cat.name.toLowerCase())}
+                          className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                        >
+                          <span className="font-medium">{cat.name}</span>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-gray-500">
+                              {typeof count === 'number' ? `(${count})` : count}
+                            </span>
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </button>
+                      );
+                    })}
                     <button
                       onClick={() => handleSearch('', '', '')}
                       className="w-full flex items-center justify-start px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
@@ -373,7 +504,11 @@ export default function ListingsContent() {
                 {activeTab === 'categories' && (
                   <div className="p-4 space-y-0.5">
                     {categories.map((category) => {
-                      const count = getCategoryCount(category.name);
+                      const count = loadingCounts ? (
+                        <span className="inline-block w-8 h-4 bg-gray-200 animate-pulse rounded"></span>
+                      ) : (
+                        categoryCounts[category.name.toUpperCase()] || 0
+                      );
                       const isActive = selectedCategory === category.name;
                       return (
                         <button
@@ -385,12 +520,12 @@ export default function ListingsContent() {
                               : 'hover:bg-gray-100 text-gray-700 font-medium'
                           }`}
                         >
-                          <span className="uppercase">{category.name}</span>
-                          <div className="flex items-center space-x-2">
+                          <span className="uppercase truncate flex-1 text-left pr-2">{category.name}</span>
+                          <div className="flex items-center space-x-2 flex-shrink-0">
                             <span className={isActive ? 'text-white' : 'text-gray-500'}>
-                              ({count})
+                              {typeof count === 'number' ? `(${count})` : count}
                             </span>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                             </svg>
                           </div>
@@ -409,7 +544,12 @@ export default function ListingsContent() {
                   <input
                     type="text"
                     placeholder="Buscar..."
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={location}
+                    onChange={(e) => {
+                      setLocation(e.target.value);
+                      handleSearch(searchTerm, selectedCategory, e.target.value);
+                    }}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
 
@@ -468,11 +608,12 @@ export default function ListingsContent() {
                 <div>
                   <h4 className="text-xs font-bold text-gray-900 mb-2">Vendido por</h4>
                   <div className="space-y-1.5">
-                    {['Todas', 'Cuponatic', 'Marketplace'].map((seller) => (
+                    {['Todas', 'Marketplace'].map((seller) => (
                       <label key={seller} className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          defaultChecked={seller === 'Todas'}
+                          checked={sellerFilters.includes(seller)}
+                          onChange={() => toggleSellerFilter(seller)}
                           className="w-4 h-4 text-blue-600 focus:ring-blue-500 rounded"
                         />
                         <span className="text-sm text-gray-700">{seller}</span>
@@ -491,18 +632,32 @@ export default function ListingsContent() {
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto"></div>
                 <p className="mt-4 text-gray-600">Cargando...</p>
               </div>
-            ) : businesses.length > 0 ? (
+            ) : (() => {
+              const filteredBusinesses = getFilteredBusinesses();
+              const initialDisplayCount = 9;
+              const displayedBusinesses = showAllBusinesses 
+                ? filteredBusinesses 
+                : filteredBusinesses.slice(0, initialDisplayCount);
+              const hasMore = filteredBusinesses.length > initialDisplayCount;
+              
+              return displayedBusinesses.length > 0 ? (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {businesses.map((business) => {
+                {displayedBusinesses.map((business) => {
                   const primaryImage = business.images?.find(img => img.is_primary) || business.images?.[0];
-                  const hasDiscount = Math.random() > 0.5;
-                  const discountPercent = hasDiscount ? Math.floor(Math.random() * 40) + 20 : 0;
-                  const originalPrice = hasDiscount ? Math.floor(Math.random() * 300000) + 200000 : 0;
-                  const currentPrice = hasDiscount ? Math.floor(originalPrice * (1 - discountPercent / 100)) : Math.floor(Math.random() * 200000) + 50000;
-                  const soldCount = Math.floor(Math.random() * 50) + 10;
-                  const showBanner = Math.random() > 0.7;
-                  const bannerText = showBanner ? (Math.random() > 0.5 ? 'TENDENCIAS DE NOVIEMBRE' : 'DESTINOS TOP') : '';
+                  // Usar precio real del negocio
+                  // Convertir has_offer correctamente (puede venir como string 'true', boolean true, etc.)
+                  const hasOffer = business.has_offer === true || 
+                                  business.has_offer === 'true' || 
+                                  business.has_offer === 't' || 
+                                  business.has_offer === 1 || 
+                                  false;
+                  const currentPrice = Number(business.offer_price) || Number(business.price) || 0;
+                  const originalPrice = hasOffer && business.offer_price ? Number(business.price) : 0;
                   const distance = (Math.random() * 200 + 10).toFixed(1);
+                  
+                  // Debug: Mostrar en consola si tiene oferta (solo para desarrollo)
+                  // console.log('Business:', business.name, 'has_offer:', business.has_offer, 'hasOffer:', hasOffer);
 
                   return (
                     <div key={business.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
@@ -516,12 +671,13 @@ export default function ListingsContent() {
                               maxImages={3}
                               className="w-full h-full"
                             />
-                            {/* Banner */}
-                            {showBanner && (
-                              <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-bold text-white z-20 ${
-                                bannerText === 'TENDENCIAS DE NOVIEMBRE' ? 'bg-orange-500' : 'bg-blue-600'
-                              }`}>
-                                {bannerText}
+                            {/* Badge de Ofertas */}
+                            {hasOffer && (
+                              <div className="absolute top-2 left-2 px-3 py-1.5 rounded-md text-xs font-bold text-white z-20 bg-gradient-to-r from-red-500 to-orange-500 shadow-lg flex items-center space-x-1.5">
+                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.179 4.455a1 1 0 01-1.934 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.179-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+                                </svg>
+                                <span>OFERTA</span>
                               </div>
                             )}
                           </>
@@ -530,6 +686,15 @@ export default function ListingsContent() {
                             <svg className="w-12 h-12 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
+                            {/* Badge de Ofertas para negocio sin imagen */}
+                            {hasOffer && (
+                              <div className="absolute top-2 left-2 px-3 py-1.5 rounded-md text-xs font-bold text-white z-20 bg-gradient-to-r from-red-500 to-orange-500 shadow-lg flex items-center space-x-1.5">
+                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.179 4.455a1 1 0 01-1.934 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.179-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+                                </svg>
+                                <span>OFERTA</span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -562,23 +727,41 @@ export default function ListingsContent() {
                         </div>
 
                         {/* Price */}
-                        <div className="flex items-baseline space-x-2 mb-2">
-                          <span className="text-xl font-bold text-gray-900">
-                            ${currentPrice.toLocaleString('es-CO')}
-                          </span>
-                          {hasDiscount && (
-                            <span className="text-sm text-gray-500 line-through">
-                              ${originalPrice.toLocaleString('es-CO')}
+                        {currentPrice > 0 && (
+                          <div className="flex items-baseline space-x-2 mb-2">
+                            <span className="text-xl font-bold text-gray-900">
+                              ${currentPrice.toLocaleString('es-CO')}
                             </span>
-                          )}
-                        </div>
+                            {hasOffer && originalPrice > 0 && (
+                              <>
+                                <span className="text-sm text-gray-500 line-through">
+                                  ${originalPrice.toLocaleString('es-CO')}
+                                </span>
+                                <span className="text-xs font-bold text-red-500">
+                                  -{Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}%
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Offer Description */}
+                        {hasOffer && business.offer_description && (
+                          <div className="mb-2">
+                            <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                              {business.offer_description}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Sold Count */}
-                        <div className="mb-3">
-                          <span className="text-xs text-gray-600 font-medium">
-                            {soldCount} Vendidos
-                          </span>
-                        </div>
+                        {business.total_reviews !== undefined && business.total_reviews > 0 && (
+                          <div className="mb-3">
+                            <span className="text-xs text-gray-600 font-medium">
+                              {business.total_reviews} {business.total_reviews === 1 ? 'Reseña' : 'Reseñas'}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Button */}
                         <button
@@ -595,11 +778,31 @@ export default function ListingsContent() {
                   );
                 })}
               </div>
+              {hasMore && (
+                <div className="text-center mt-12">
+                  <button
+                    onClick={() => setShowAllBusinesses(!showAllBusinesses)}
+                    className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  >
+                    <span>{showAllBusinesses ? 'Ver Menos' : 'Ver Más'}</span>
+                    <svg 
+                      className={`w-5 h-5 transition-transform duration-200 ${showAllBusinesses ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              </>
             ) : (
               <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
-                <p className="text-gray-600">No se encontraron negocios</p>
+                <p className="text-gray-600">No se encontraron negocios con los filtros seleccionados</p>
               </div>
-            )}
+            );
+            })()}
           </div>
         </div>
       </main>

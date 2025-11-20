@@ -345,6 +345,18 @@ export const categoryApi = {
     }
   },
 
+  // Obtener conteos de negocios por categoría
+  getCounts: async (): Promise<Array<{ id: number; name: string; count: number }>> => {
+    const url = '/categories/counts';
+    try {
+      const response = await api.get<ApiResponse<Array<{ id: number; name: string; count: number }>>>(url);
+      return response.data.data || [];
+    } catch (error) {
+      console.error('❌ Error in categoryApi.getCounts:', error);
+      throw error;
+    }
+  },
+
   // Obtener categoría por ID
   getById: async (id: number): Promise<Category> => {
     const response = await api.get<ApiResponse<Category>>(`/categories/${id}`);
