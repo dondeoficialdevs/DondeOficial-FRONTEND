@@ -29,7 +29,7 @@ export interface Business {
   average_rating?: number;
   price?: number;
   offer_price?: number;
-  has_offer?: boolean;
+  has_offer?: boolean | string | number;
   offer_description?: string;
   created_at: string;
   updated_at: string;

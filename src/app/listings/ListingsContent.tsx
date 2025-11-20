@@ -647,17 +647,15 @@ export default function ListingsContent() {
                   const primaryImage = business.images?.find(img => img.is_primary) || business.images?.[0];
                   // Usar precio real del negocio
                   // Convertir has_offer correctamente (puede venir como string 'true', boolean true, etc.)
-                  const hasOffer = business.has_offer === true || 
-                                  business.has_offer === 'true' || 
-                                  business.has_offer === 't' || 
-                                  business.has_offer === 1 || 
-                                  false;
+                  const rawHasOffer = business.has_offer;
+                  const hasOffer = 
+                    (typeof rawHasOffer === 'boolean' && rawHasOffer) ||
+                    (typeof rawHasOffer === 'string' && ['true', 't'].includes(rawHasOffer.toLowerCase())) ||
+                    (typeof rawHasOffer === 'number' && rawHasOffer === 1) ||
+                    false;
                   const currentPrice = Number(business.offer_price) || Number(business.price) || 0;
                   const originalPrice = hasOffer && business.offer_price ? Number(business.price) : 0;
                   const distance = (Math.random() * 200 + 10).toFixed(1);
-                  
-                  // Debug: Mostrar en consola si tiene oferta (solo para desarrollo)
-                  // console.log('Business:', business.name, 'has_offer:', business.has_offer, 'hasOffer:', hasOffer);
 
                   return (
                     <div key={business.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">

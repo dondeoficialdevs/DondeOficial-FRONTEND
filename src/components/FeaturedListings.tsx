@@ -76,7 +76,15 @@ export default function FeaturedListings({ businesses, loading, onBusinessClick 
                   )}
                   
                   {/* Badge de Ofertas */}
-                  {(business.has_offer === true || business.has_offer === 'true' || business.has_offer === 't' || business.has_offer === 1) && (
+                  {(() => {
+                    const rawHasOffer = business.has_offer;
+                    const hasOffer = 
+                      (typeof rawHasOffer === 'boolean' && rawHasOffer) ||
+                      (typeof rawHasOffer === 'string' && ['true', 't'].includes(rawHasOffer.toLowerCase())) ||
+                      (typeof rawHasOffer === 'number' && rawHasOffer === 1) ||
+                      false;
+                    return hasOffer;
+                  })() && (
                     <div className="absolute top-2 left-2 z-20">
                       <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-md text-xs font-bold shadow-lg flex items-center space-x-1.5">
                         <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
