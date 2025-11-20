@@ -57,6 +57,7 @@ export default function AdminLayout({
   };
 
   const navItems = [
+    { href: '/admin/businesses', label: 'Directorios' },
     { href: '/admin/leads', label: 'Leads' },
     { href: '/admin/newsletter', label: 'Newsletter' },
     { href: '/admin/categories', label: 'Categorías' },
@@ -89,7 +90,7 @@ export default function AdminLayout({
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Panel de Administración</h1>
               <p className="text-gray-600">
-                Gestiona leads, suscriptores y categorías
+                Gestiona directorios, leads, suscriptores y categorías
                 {user && (
                   <span className="ml-2 text-sm text-gray-500">
                     • {user.full_name}
