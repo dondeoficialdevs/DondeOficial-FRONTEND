@@ -240,10 +240,10 @@ export default function AddListingPage() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-400 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="Nombre de tu negocio"
+                  placeholder="Ej: Restaurante El Buen Sabor"
                 />
                 {errors.name && (
                   <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -260,7 +260,7 @@ export default function AddListingPage() {
                   value={formData.category_id}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 ${
                     errors.category_id ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
@@ -288,10 +288,10 @@ export default function AddListingPage() {
                 onChange={handleChange}
                 required
                 rows={4}
-                className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-400 ${
                   errors.description ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Describe tu negocio en detalle..."
+                placeholder="Ej: Somos un restaurante familiar especializado en comida tradicional. Ofrecemos platos caseros preparados con ingredientes frescos y locales..."
               />
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">{errors.description}</p>
@@ -311,8 +311,8 @@ export default function AddListingPage() {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Dirección del negocio"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                  placeholder="Ej: Calle Principal 123, Ciudad, Estado"
               />
             </div>
 
@@ -327,8 +327,8 @@ export default function AddListingPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Número de teléfono"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                  placeholder="Ej: +1 234 567 8900 o (123) 456-7890"
                 />
               </div>
 
@@ -342,10 +342,10 @@ export default function AddListingPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-400 ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="correo@example.com"
+                  placeholder="Ej: contacto@tunegocio.com"
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -363,7 +363,7 @@ export default function AddListingPage() {
                 name="website"
                 value={formData.website}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                className={`w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-400 ${
                   errors.website ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="https://tu-sitio-web.com"
@@ -383,7 +383,7 @@ export default function AddListingPage() {
                 name="opening_hours"
                 value={formData.opening_hours}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                 placeholder="Ej: Lun-Vie: 9AM-6PM, Sáb: 10AM-4PM"
               />
             </div>
@@ -400,8 +400,8 @@ export default function AddListingPage() {
                   name="latitude"
                   value={formData.latitude}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 40.7128"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                  placeholder="Ej: 40.7128 (opcional)"
                 />
               </div>
 
@@ -416,8 +416,8 @@ export default function AddListingPage() {
                   name="longitude"
                   value={formData.longitude}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., -74.0060"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                  placeholder="Ej: -74.0060 (opcional)"
                 />
               </div>
             </div>
