@@ -110,14 +110,14 @@ export default function Home() {
         <Header />
 
         <main>
-          <ActionCards />
-          
           <CategorySection
             categories={categories}
             onCategorySelect={(categoryName) => handleSearch('', categoryName)}
           />
           
           <GoogleMapsSection businesses={businesses} onSearch={handleSearch} />
+          
+          <ActionCards />
           
           {error && (
             <div className="container mx-auto px-4 py-8">
