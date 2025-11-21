@@ -1,6 +1,6 @@
-# DondeOficial - Frontend
+# Frontend - DirectorioComercial
 
-Frontend de la aplicación DondeOficial construido con Next.js 15, React 19, TypeScript y Tailwind CSS. Este proyecto replica el diseño y funcionalidades del sitio fioxen.vercel.app.
+Aplicación frontend construida con Next.js 15, React 19, TypeScript y Tailwind CSS. Para documentación completa del proyecto, consultar [README.md](../README.md) y [DOCUMENTACION_TECNICA.md](../DOCUMENTACION_TECNICA.md).
 
 ## Tecnologías Utilizadas
 
