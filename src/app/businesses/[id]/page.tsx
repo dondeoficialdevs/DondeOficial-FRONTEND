@@ -36,6 +36,24 @@ export default function BusinessDetail() {
   const loadBusiness = async (id: number) => {
     try {
       setLoading(true);
+      setError(null);
+      
+      // Verificar autenticación directamente
+      const authenticated = authApi.isAuthenticated();
+      
+      // Si el usuario es admin, intentar obtener el negocio incluyendo pendientes
+      if (authenticated) {
+        try {
+          const businessData = await businessApi.getByIdForAdmin(id);
+          setBusiness(businessData);
+          return;
+        } catch (adminError) {
+          // Si falla como admin, intentar como usuario normal
+          console.log('No se pudo obtener como admin, intentando como usuario normal');
+        }
+      }
+      
+      // Para usuarios no autenticados o si falló como admin, usar método normal
       const businessData = await businessApi.getById(id);
       setBusiness(businessData);
     } catch (error) {

@@ -241,6 +241,12 @@ export const businessApi = {
     return response.data.data;
   },
 
+  // Obtener negocio por ID incluyendo pendientes (solo admin)
+  getByIdForAdmin: async (id: number): Promise<Business> => {
+    const response = await api.get<ApiResponse<Business>>(`/businesses/admin/${id}`);
+    return response.data.data;
+  },
+
   // Crear nuevo negocio con imágenes (multipart/form-data)
   create: async (businessData: Partial<Business>, images?: File[]): Promise<Business> => {
     const formData = new FormData();
